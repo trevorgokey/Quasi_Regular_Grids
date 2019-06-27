@@ -1,0 +1,6 @@
+2               !d:             dimensionality of your gridpoints
+100             !NG:            number of gridpoints
+grid.dat        !coord_in:      input gridpoints
+alphas.dat      !alpha_in:      input widths
+10000          !Nsobol:        number of Sobol Points
+1000            !data_freq:     frequnecy to evaluate eigenvalues
