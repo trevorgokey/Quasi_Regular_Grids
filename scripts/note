@@ -1,0 +1,26 @@
+6-27-19
+Codes:
+2D-Gaussian
+Random points, quasi random, quasi-random with rejection, Q-regular
+
+correlation:
+was a simple correlation function calculatinos, could be useful as a tutorial,
+probbaly do not need to keep it in this directory should place in numerical tutorials codes
+
+1D/2D Harmonic Oscillator:
+Only have a rough draft of the code should make a full version
+uniform, quasi-regular
+
+2D-Morse:
+With delta
+without delta
+alpha as a fn of p
+alpha as a fn of distance 
+
+3D-Morse
+With delta
+without delta
+alpha as a fn of p
+alpha as a fn of distance  (make this main, currently only on github)
+
+2D-Henon-Helis
