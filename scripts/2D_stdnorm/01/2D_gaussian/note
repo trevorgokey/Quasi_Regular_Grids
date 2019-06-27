@@ -1,0 +1,3 @@
+4-30-19
+here we remove the 4 epsilon and the beta term, and the single particle potential
+when epsilon is large it makes the single particle potential negligible when compared to LJ so we just simplify things by removing it
