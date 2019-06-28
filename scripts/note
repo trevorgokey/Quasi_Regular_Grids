@@ -12,6 +12,10 @@ Only have a rough draft of the code should make a full version
 uniform, quasi-regular
 
 2D-Morse:
+
+May want to keep the code that uses original monte carlo algorithm
+i.e. the single potential term and the pair-wise potnetial term
+
 With delta
 without delta
 alpha as a fn of p
