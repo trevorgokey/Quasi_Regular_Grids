@@ -1,0 +1,114 @@
+\documentclass[preprint,showpacs,preprintnumbers,amsmath,amssymb]{revtex4}
+\usepackage{graphicx}% Include figure files
+\usepackage{dcolumn}% Align table columns on decimal point
+\usepackage{bm}% bold math
+\usepackage{amsmath}
+\usepackage{braket}
+\def\fct#1{\mathop{\rm #1}} % e.g.,  \fct{tr}
+\def\Rz{\mathbb{R}}
+\def\Cz{\mathbb{C}}
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\eea}{\end{eqnarray}}
+\newcommand{\pd}{\partial}
+\newcommand{\bbx}{\bar{\mbox{\bf x}}^{ij}}
+\newcommand{\bbG}{\left(\mbox{\bf G}^i+\mbox{\bf G}^j\right)}
+\newcommand{\bx}{\mbox{\bf x}}        % centered radii
+\newcommand{\by}{\mbox{\bf y}}
+\newcommand{\bU}{\mbox{\bf U}}
+\newcommand{\bV}{\mbox{\bf V}}
+\newcommand{\bP}{\mbox{\bf P}}
+\newcommand{\bW}{\mbox{\bf W}}
+\newcommand{\uu}{\mathcal{U}}
+\newcommand{\Eq}{Eq. \ref}
+\newcommand{\Fig}{Fig. \ref}
+\newcommand{\bR}{\mbox{\bf R}}
+\newcommand{\bQ}{\mbox{\bf Q}}
+\newcommand{\br}{\mbox{\bf r}}
+\newcommand{\bz}{\mbox{\bf z}}
+\newcommand{\bh}{\mbox{\bf h}}
+\newcommand{\bq}{\mbox{\bf q}}
+\newcommand{\bp}{\mbox{\bf p}}
+\newcommand{\ba}{\mbox{\bf a}}
+\newcommand{\bb}{\mbox{\bf b}}
+\newcommand{\bc}{\mbox{\bf c}}
+\newcommand{\bd}{\mbox{\bf d}}
+\newcommand{\bl}{\mbox{\bf l}}
+\newcommand{\bs}{\mbox{\bf s}}
+\newcommand{\bu}{\mbox{\bf u}}
+\newcommand{\bC}{\mbox{\bf C}}
+\newcommand{\bS}{\mbox{\bf S}}
+\newcommand{\bF}{\mbox{\bf F}}
+\newcommand{\bA}{\mbox{\bf A}}
+\newcommand{\bB}{\mbox{\bf B}}
+\newcommand{\bD}{\mbox{\bf D}}
+\newcommand{\bG}{\mbox{\bf G}}
+\newcommand{\bM}{\mbox{\bf M}}
+\newcommand{\bO}{\boldsymbol\Omega}
+\newcommand{\bL}{\boldsymbol\Lambda}
+\newcommand{\bZ}{\mbox{\bf Z}}
+\newcommand{\bT}{\mbox{\bf T}}
+\newcommand{\bK}{\mbox{\bf K}}
+\newcommand{\bbf}{\mbox{\bf f}}
+\newcommand{\bI}{\mbox{\bf I}}
+\newcommand{\bg}{\mbox{\bf g}}
+\def\eps{\varepsilon}
+\def\<{\left\langle}                 % expectation
+\def\>{\right\rangle}                 % expectation
+\def\D{\displaystyle}               % display style
+\def\half{{1\over 2}}               % display style
+\def\att{                   % mark at the margin
+    \marginpar[ \hspace*{\fill} \raisebox{-0.2em}{\rule{2mm}{1.2em}} ]
+    {\raisebox{-0.2em}{\rule{2mm}{1.2em}} }
+        }
+\begin{document}
+
+%===============================================================================%
+\section*{Gaussian Pairwise Interations}
+%===============================================================================%
+Previously we were using a Lennard Jones pair-wise interaction to minimize our particle distributions. 
+This pair-wise potential needs to be defined locally, if this interaction extends to long distances it will change the global distribution of the particles. 
+Previously we used the Lennard-Jones Potential, however, in high-dimensions this will no longer be local, but become long-ranged. 
+
+A better approach will be to use a gaussian potential for minimizing the pairwise interactions. 
+Consider a quasi-Gaussian pairwise interaction ($\bU_{ij}$)
+\be
+\begin{split}
+    \bU_{ij}(\bx_i,\bx_j)&:=-\exp\left\{\frac{\left(|\bx_{ij}|-\sigma_i\right)^2}{\left(\gamma\;\sigma_i\right)^2}\right\}\\
+    |\bx_{ij}|&=\sum\left(\bx_i-\bx_j\right)^2
+\end{split}
+\ee
+Where $\gamma$ is a constant defining the width of the Gaussian (can be paramaterized, try $\gamma$=0.1 for testing purposes). 
+
+
+
+$\sigma$ represents the distance between nearest neighbors for our regularly distributed $\bP$ gridpoints. 
+\be
+\sigma_i=\sigma(\bx_i) := c\cdot \left[N\cdot P\left(\bx_i\right)\right]^{-1/d}
+\ee
+
+The constant c should be on the order of 1, ensuring particles do not form clusters (c is too small) or expand to the surface (c is too large). 
+%===============================================================================%
+\subsection*{Distribution of Interest}
+%===============================================================================%
+The distribution of interest ($\bP$) is defined in terms of the Morse Potential
+\be
+\begin{split}
+    \bP(\bx)&:=\frac{E_{cut}-\bV(\bx)}{\int d\bx\; E_{cut}-\bV(\bx)}\\
+    \bV(\bx)&:=D\sum_i \left(e^{-w_i\bx_i}-1\right)^2
+\end{split}
+\ee
+
+Where we define a maximum energy contour ($E_{cut}$)
+\[ \begin{cases} 
+    \bP(\bx)=0 & \bV(\bx) > E_{cut} \\
+    \bP(\bx)>0 & \bV(\bx) < E_{cut} \\
+   \end{cases}
+\]
+
+$\sigma$ represents the distance between nearest neighbors for our regularly distributed $\bP$ gridpoints. 
+\be
+\sigma_i=\sigma(\bx_i) := c\cdot \left[N\cdot P\left(\bx_i\right)\right]^{-1/d}
+\ee
+\end{document}

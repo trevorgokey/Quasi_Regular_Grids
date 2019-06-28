@@ -1,0 +1,10 @@
+5/30/19
+
+00 is initial test (uses most recent version of grid generation)
+i.e. only accept a move when the energy decreases
+
+01 uses the older version where we use the expotential to define acceptance
+
+neither version is working currectly
+
+Seems like we need a steeper repulsion term to force particles apart, they seem to cluster here.
