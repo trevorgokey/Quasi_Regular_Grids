@@ -1,0 +1,3 @@
+5-19-19 This code reads in same grid and alphas used in sobol and gives eigenvalues of the same order of magnitude as sobol.
+this means the quadrature code is working we no longer need sobol
+Keep this one around for referece, but once we finalize 2D morse with QLJ grid this can be removed

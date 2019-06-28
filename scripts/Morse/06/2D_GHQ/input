@@ -1,0 +1,9 @@
+2               !d:             dimensionality of your gridpoints
+482             !NG:            number of gridpoints
+10            !GH
+2.56               !alpha0:        scaling gaussian widths. 2.56 from RCN
+11.5            !Ecut:          Energy cutoff (same as grid generation)
+1               !c_LJ:        LJ constant needed for computing alphas
+grid_unif.dat        !grid_in:      input gridpoints
+all_theory.dat      !theory_in:      ordered theory eigenvalues for 2D Morse
+.FALSE.              !logical for using uniform grid (true) or QLJ grid (false)
