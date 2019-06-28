@@ -1,0 +1,269 @@
+\documentclass[preprint,showpacs,preprintnumbers,amsmath,amssymb]{revtex4}
+\usepackage{graphicx}% Include figure files
+\usepackage{dcolumn}% Align table columns on decimal point
+\usepackage{bm}% bold math
+\usepackage{amsmath}
+\usepackage{braket}
+\def\fct#1{\mathop{\rm #1}} % e.g.,  \fct{tr}
+\def\Rz{\mathbb{R}}
+\def\Cz{\mathbb{C}}
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\eea}{\end{eqnarray}}
+\newcommand{\pd}{\partial}
+\newcommand{\bbx}{\bar{\mbox{\bf x}}^{ij}}
+\newcommand{\bbG}{\left(\mbox{\bf G}^i+\mbox{\bf G}^j\right)}
+\newcommand{\bx}{\mbox{\bf x}}        % centered radii
+\newcommand{\by}{\mbox{\bf y}}
+\newcommand{\bU}{\mbox{\bf U}}
+\newcommand{\bV}{\mbox{\bf V}}
+\newcommand{\bP}{\mbox{\bf P}}
+\newcommand{\bW}{\mbox{\bf W}}
+\newcommand{\uu}{\mathcal{U}}
+\newcommand{\Eq}{Eq. \ref}
+\newcommand{\Fig}{Fig. \ref}
+\newcommand{\bR}{\mbox{\bf R}}
+\newcommand{\bQ}{\mbox{\bf Q}}
+\newcommand{\br}{\mbox{\bf r}}
+\newcommand{\bz}{\mbox{\bf z}}
+\newcommand{\bh}{\mbox{\bf h}}
+\newcommand{\bq}{\mbox{\bf q}}
+\newcommand{\bp}{\mbox{\bf p}}
+\newcommand{\ba}{\mbox{\bf a}}
+\newcommand{\bb}{\mbox{\bf b}}
+\newcommand{\bc}{\mbox{\bf c}}
+\newcommand{\bd}{\mbox{\bf d}}
+\newcommand{\bl}{\mbox{\bf l}}
+\newcommand{\bs}{\mbox{\bf s}}
+\newcommand{\bu}{\mbox{\bf u}}
+\newcommand{\bC}{\mbox{\bf C}}
+\newcommand{\bS}{\mbox{\bf S}}
+\newcommand{\bF}{\mbox{\bf F}}
+\newcommand{\bA}{\mbox{\bf A}}
+\newcommand{\bB}{\mbox{\bf B}}
+\newcommand{\bD}{\mbox{\bf D}}
+\newcommand{\bG}{\mbox{\bf G}}
+\newcommand{\bM}{\mbox{\bf M}}
+\newcommand{\bO}{\boldsymbol\Omega}
+\newcommand{\bL}{\boldsymbol\Lambda}
+\newcommand{\bZ}{\mbox{\bf Z}}
+\newcommand{\bT}{\mbox{\bf T}}
+\newcommand{\bK}{\mbox{\bf K}}
+\newcommand{\bbf}{\mbox{\bf f}}
+\newcommand{\bI}{\mbox{\bf I}}
+\newcommand{\bg}{\mbox{\bf g}}
+\def\eps{\varepsilon}
+\def\<{\left\langle}                 % expectation
+\def\>{\right\rangle}                 % expectation
+\def\D{\displaystyle}               % display style
+\def\half{{1\over 2}}               % display style
+\def\att{                   % mark at the margin
+    \marginpar[ \hspace*{\fill} \raisebox{-0.2em}{\rule{2mm}{1.2em}} ]
+    {\raisebox{-0.2em}{\rule{2mm}{1.2em}} }
+        }
+\begin{document}
+
+\section*{2D Morse}
+We are interested in restricting our target distribution $\bP(\bx)$ within a cutoff contour defined by $E_{cut}$, we therefore define the distribution to be 0 if the Potential Energy ($\bV$) is beyond the cutoff contour, and positive if the Potential Energy is within the contour. 
+\[ \begin{cases} 
+    \bP(\bx)=0 & \bV(\bx) > E_{cut} \\
+    \bP(\bx)>0 & \bV(\bx) < E_{cut} \\
+   \end{cases}
+\]
+
+Following Garaschuk the 2D Morse Ecut=11.5, and the 3D is Ecut=7.5
+
+To avoid numerical issues generated at 0 we introduce a finite parameter $\Delta$ such that 
+\be
+\bP(\bx):=\frac{E_{cut}+\Delta - \bV(\bx)}{\int d\bx\; E_{cut}+\Delta - \bV(\bx)}
+\ee
+(where we make sure to normalize the target distribution). 
+Again following Garaschuk we take $\Delta$ to be 1\% of Ecut. 
+
+Consider the two-dimensional Morse Potential.
+\be
+\bV(x,y):=D\left[\left(e^{-w_xx}-1\right)^2+\left(e^{-w_yy}-1\right)^2\right]
+\ee
+
+We are interested in $\bP$ having regular spacing between gridpoints, we therefore introduce a quasi Lennard-Jones pairwise interaction ($\bU_{ij}$) of the form.
+\be
+\begin{split}
+    \bU_{ij}(\bx_i,\bx_j):=&\left[\frac{\sigma_i(\bx_i)}{|\bx_{ij}|}\right]^{12}-\left[\frac{\sigma_i(\bx_i)}{|\bx_{ij}|}\right]^6 \\
+    |\bx_{ij}|&=\sum\left(\bx_i-\bx_j\right)^2
+\end{split}
+\ee
+%===============================================================================%
+%\be    % no longer using T, epsilon, V(x) for our calcualitons
+%\begin{split}
+%    \bU_{ij}(\bx_i,\bx_j):=4\epsilon &\left\{\left[\frac{\sigma_i(\bx_i)}{|\bx_{ij}|}\right]^{12}-\left[\frac{\sigma_i(\bx_i)}{|\bx_{ij}|}\right]^6 \right\}\\
+%    |\bx_{ij}|&=\sum\left(\bx_i-\bx_j\right)^2
+%\end{split}
+%\ee
+%$\epsilon$ is a parameter essentially playing the role of temperature in our system. 
+%A large $\epsilon$ corresponds to low temperature, at low temperature the Potential Energy becomes negligible compared to the LJ interaction. 
+%===============================================================================%
+$\sigma$ represents the distance between nearest neighbors for our regularly distributed $\bP$ gridpoints. 
+\be
+\sigma_i=\sigma(\bx_i) := c\cdot \left[N\cdot P\left(\bx_i\right)\right]^{-1/d}
+\ee
+
+The constant c should be on the order of 1. 
+Our mmc algorithm uses the Pair-Potential to optimize the gridpoints
+\be
+\uu:=\sum_{i,j}\bU_{ij}(\bx_i,\bx_j)
+\ee
+%===============================================================================%
+% no longer using T, epsilon, V(x) for our calcualitons
+%If we wish to include temperature and $\epsilon$ (to be consistent with traditional MMC) we could define 
+%\be
+%\uu:=\sum_{i=1}^N \bV(\bx_i)+\sum_{i,j}\bU_{ij}(\bx_i,\bx_j)
+%\ee
+%===============================================================================%
+\section{Basis Construction}
+%===============================================================================%
+\section*{Symmetric Gaussian Basis}
+%===============================================================================%
+Using Symmetric Gaussians as the basis we can reuse the derivations from DGB, removing the omega depedencies. 
+Each quasi Lennard Jones grid point is associated with a basis function in the form of a symmetric multivariate Gaussian: 
+A natural choice for $\alpha_i$  is
+\be
+    \alpha_i:=\frac{\alpha_0}{\sigma_i^2}
+\ee
+where $\alpha_0\sim 1$ is a constant to be specified later.
+\bea
+\bbx &:=& \frac{\alpha_i\bx^i+\alpha_j\bx^j}{\alpha_i+\alpha_j} \\
+A &:=& \exp\left[-\frac {\alpha_i\alpha_j}{2(\alpha_i+\alpha_j)}\sum_k(\bx^i_k -\bx^j_k)^2\right]\\\label{eq:Sk}
+S_k &:=& \left[\frac{2\pi}{(\alpha_i+\alpha_j)}\right]^{1/2} \exp\left[-\frac {\alpha_i\alpha_j}{2(\alpha_i+\alpha_j)}(\bx^i_k -\bx^j_k)^2\right]
+\eea
+
+Note that the $i,j$-independent factor in \Eq{eq:Sk} can be dropped
+as it does not affect the final generalized eigenvalue problem ({\it
+  cf.} \Eq{eq:GEP}), i.e., we can safely use
+\be
+S_k = \frac{1}{\sqrt{\alpha_i+\alpha_j}}\exp\left[-\frac {\alpha_i\alpha_j}{2(\alpha_i+\alpha_j)}(\bx^i_k -\bx^j_k)^2\right]
+\ee
+
+For convenience we will normalize our overlap matrix elements
+\be
+S_k=\frac{(\alpha_i\alpha_j)^{1/4}}{(\alpha_i+\alpha_j)^{1/2}}\exp\left[-\frac {\alpha_i\alpha_j}{2(\alpha_i+\alpha_j)}(\bx^i_k -\bx^j_k)^2\right]
+\ee
+
+for the product of two Gaussians we have
+\be
+\begin{split}
+\Phi_i(\bx)\Phi_j(\bx)&=\bS_{ij}\, P_{ij}(\bx) 
+\end{split}
+\ee
+
+where
+\bea
+P_{ij}(\bx) &=& \prod_{k=1}^d P_{ij}^{(k)}(\bx_k)\\\nonumber
+P_{ij}^{(k)}(\bx_k) &:=& \left[\frac{(\alpha_i+\alpha_j)}{2\pi}\right]^{1/2}
+ \exp\left(-\frac {(\alpha_i+\alpha_j)}{2}\,
+   (\bx_k-\bbx_k)^2\right) 
+\eea
+is a normalized Gaussian distribution ($\int d\bx_k\; P_{ij}^{(k)}(\bx_k)=1$)
+
+In seperable coordinates the overlap matrix can be computed as
+\be
+    \bS_{ij} = \prod_{k=1}^d S_k = \left(\frac{\sqrt{\alpha_i\alpha_j}}{\alpha_i+\alpha_j}\right)^{d/2} \exp\left[\sum_{k=1}^d \frac{-\alpha_i\alpha_j(\bx_k^i-\bx_k^j)^2}{2(\alpha_i+\alpha_j)}\right]
+\ee
+
+\textbf{Kinetic Energy} 
+\be
+\bT_{ij}=\bS_{ij}\sum_{k=1}^d \frac{\alpha_i\alpha_j}{2(\alpha_i+\alpha_j)}\left[1-
+\frac{\alpha_i\alpha_j(\bx^i_k-\bx^j_k)^2}{\alpha_i+\alpha_j}\right]
+\ee
+
+\textbf{Potential Energy}
+\be\label{eq:Vij}
+\bV_{ij} = \bS_{ij} \int_{\mathbb{R}^d}d\bx\; P_{ij}(\bx) V(\bq_0+\bM^{-1/2}\bU\bx) 
+\ee
+
+The integral in \Eq{eq:Vij} can be computed by the quasi-Monte Carlo
+method as following.
+First, generate a quasi-random sequesnce $\bz^{(l)},\ l=1,...,L\}$
+sampled from the standard normal distribution $(2\pi)^{-d/2} \exp\left(-\frac 1 2
+  \bz^{\rm T} \bz \right)$. Then use
+\be
+\int_{\mathbb{R}^d}d\br\; P_{ij}(\bx) V(\bq_0+\bM^{-1/2}\bU\bx) \approx \frac 1 L
+\sum_{l=1}^L V(\bq^{(l)})
+\ee 
+with
+\be
+\bx_k^{(l)}=\bbx_k+\left[(\alpha_i+\alpha_j)\right]^{-1/2}\bz_k^{(l)}
+\ee
+and
+\be
+\begin{split}
+    \bq^{(l)}&=\bq_0+\bM^{-1/2}\bU\bx^{(l)},\\
+    \bq_:^{(l)}&=\bq_0+\bM_:^{-1/2}\sum_k \bU_{k,:}\bx_:^{(l)},\\
+\end{split}
+\ee
+
+\subsection*{Generalized Eigenvalue Problem}
+Finally, the vibrational eigenenergies $E$ and eigenfunctions 
+\be
+\Psi(\br)=\sum_j c_j\Phi_j(\bx)
+\ee
+can be obtained from solving the generalized eigenvalue problem:
+
+\be\label{eq:GEP}
+\sum_j(\bV_{ij}+\bT_{ij}-E\bS_{ij})c_j=0
+\ee
+%===============================================================================%
+%===============================================================================%
+%===============================================================================%
+%===============================================================================%
+%===============================================================================%
+%===============================================================================%
+%===============================================================================%
+
+\section{Quadrature}
+To directly compare accuracy with Garashchuk we are going to modify the general approach presented about.
+
+First we will consider a uniform grid generated within the contour defined by Ecut.
+Because the grid is completly uniform we can define our Gaussian Basis Functions to have a constant alpha (the same for every basis function). 
+
+
+
+
+
+
+
+\section*{Analytic Results}
+To test the code consider our 2D morse potential with a single atom (x,y cartesian coordinates) and a mass of 1 (Assume atomic units), D defines the morse parameter. 
+\be
+V:=D\left(\exp\left[-c_xx\right]-1\right)^2+D\left(\exp\left[-c_yy\right]-1\right)^2
+\ee
+Evaluating the standard terms we find
+\be
+\begin{split}
+    \left(\frac{\pd V}{\pd x}\right)_y &= 2Dc_xe^{-2c_xx}\left(e^{c_xx}-1\right) \;\big|_{x=0} = 0\\
+    \left(\frac{\pd V}{\pd y}\right)_x &= 2Dc_ye^{-2c_yy}\left(e^{c_yy}-1\right) \;\big|_{y=0}=0\\
+    \frac{\pd^2 V}{\pd y \pd x} &= 0\\
+    \frac{\pd^2 V}{\pd x \pd y} &= 0
+\end{split}
+\ee
+The forces are given by
+\be
+    F(x,y) = -\nabla V(x,y) = \begin{bmatrix}
+\left(-\frac{\pd V}{\pd x}\right)_y\\
+\left(-\frac{\pd V}{\pd y}\right)_x
+         \end{bmatrix} = \begin{bmatrix}
+           -2Dc_xe^{-2c_xx}\left(e^{c_xx}-1\right)\\
+           -2Dc_ye^{-2c_yy}\left(e^{c_yy}-1\right)
+         \end{bmatrix}
+\ee
+For reference we can compute the Hessian Analytically,
+\be
+    \text{Hessian} = \begin{bmatrix}
+\frac{\pd^2 V}{\pd x^2} & \frac{\pd^2 V}{\pd x\pd y} \\
+\frac{\pd^2 V}{\pd y\pd x} & \frac{\pd^2 V}{\pd y^2} 
+         \end{bmatrix} = \begin{bmatrix}
+             -2c_x^2De^{-2c_xx}\left(e^{c_xx}-2\right) & 0\\
+             0  & \quad -2c_y^2De^{-2c_yy}\left(e^{c_yy}-2\right)  
+         \end{bmatrix}
+\ee
+\end{document}

@@ -1,0 +1,8 @@
+2           !d:             dimensionality of your gridpoints
+400         !Npoints:       number of gridpoints
+1000000     !N_MC_moments:  number of MC moves for computing moments
+300	    !N_reg          number of gridpoints (every d) to compute moments (regular grid)
+10000000    !N_MC           number of MMC steps to distribute points
+1000000     !MMC_Freq       frequency for evaluating MMC
+10        !E_cut:         Energy Cutoff Contour (11.5=3D, 7.5=2D form Garaschuk)
+1           !c_LJ:          Scaling parameter for LJ sigma

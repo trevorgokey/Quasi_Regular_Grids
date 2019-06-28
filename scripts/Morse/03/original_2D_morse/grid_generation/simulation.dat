@@ -1,0 +1,10 @@
+ particle dimensionality ==>            2
+ Npoints ==>          400
+ P Normalization Iterations (N_MC) ==>      1000000
+ P(x) Normalization ==>    513.07545121681756     
+ Number of MMC Iterations for Grid ==>     10000000
+ c_LJ ==>    1.0000000000000000     
+ E_cut ==>    10.000000000000000     
+           1  xmin xmax ==>  -3.3063489517393219        11.873210340680787     
+           2  xmin xmax ==>  -3.6761469071421944        12.128572124933251     
+ Total Time ==>    635.53172200000006     
