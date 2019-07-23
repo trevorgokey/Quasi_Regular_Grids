@@ -40,7 +40,7 @@ allocate(eigx(NB),eigy(NB))
 !==============================================================================!
 !Compute 1D excitations, Excitaitons start at E_0 (ground state)
 !==============================================================================!
-do i=0,NB       
+do i=0,NB-1      
    eigx(i+1)=ax*sqrt(2.*D_morse)*(i+0.5)&
        - ((ax*sqrt(2.*D_morse)*(i+0.5))**2/(4.*D_morse))
    eigy(i+1)=ay*sqrt(2.*D_morse)*(i+0.5)&

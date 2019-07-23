@@ -37,7 +37,6 @@ function random_integer(Nmin,Nmax)
 !Nmin           ==> minimum index value (1)
 !Nmax           ==> maximum index value (Nparticles)
 !random_integer ==> integer returned
-!a              ==> Fortran intrinsic random number [0,1]
 !==============================================================================!
 implicit none
 integer::Nmin,Nmax,random_integer
@@ -108,7 +107,7 @@ Del_par=0.01*E_cut
 if(V_x(x_i)<E_cut) then
    P_x=(E_cut+Del_par-V_x(x_i))/integral_P
 else        !set equal to 0 if beyond Ecut
-   P_x=1d-8
+   P_x=1d-20
 end if
 end function P_x
 !==============================================================================!
