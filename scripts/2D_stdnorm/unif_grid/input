@@ -1,0 +1,3 @@
+-5             !lower  ==> Lower Bound for Grid
+5              !upper  ==> UpperBound for Grid 
+20              !NP_1D  ==> Number of Points in single Dimension
