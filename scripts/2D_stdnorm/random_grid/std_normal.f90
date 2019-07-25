@@ -1,27 +1,31 @@
-!> Computes the inverse cumulative density function (CDF), i.e., the quantile,
-! of the standard normal distribution given u uniform on the unit hypercube.
+!=============================================================================80
+!                   Beasly-Springer-Moro Standard Normal
+!==============================================================================!
+!       Discussion:
+!Generate a multivariate gaussain distribution using the BSM transormation
+!Subroutine uses the fortran random number generator for initial distribution
+!==============================================================================!
 FUNCTION beasley_springer_moro(u) result(x)
+!==============================================================================!
+!       Discussion:
+!Compute the inverse cumulative density function (CDF), i.e., the quantile,
+!of the standard normal distribution given u uniform on the unit hypercube.
+!==============================================================================!
     IMPLICIT NONE
-
     INTEGER :: j
     DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: u
-
     DOUBLE PRECISION :: r
     DOUBLE PRECISION, DIMENSION(SIZE(u)) :: x, y
-
-
     DOUBLE PRECISION, PARAMETER, DIMENSION(0:3) :: a = (/ &
             2.50662823884, &
             -18.61500062529, &
             41.39119773534, &
             -25.44106049637 /)
-
     DOUBLE PRECISION, PARAMETER, DIMENSION(0:3) :: b = (/ &
             -8.47351093090, &
             23.08336743743, &
             -21.06224101826, &
             3.13082909833 /)
-
     DOUBLE PRECISION, PARAMETER, DIMENSION(0:8) :: c = (/ &
             0.3374754822726147, &
             0.9761690190917186, &
@@ -32,10 +36,7 @@ FUNCTION beasley_springer_moro(u) result(x)
             0.0000321767881768, &
             0.0000002888167364, &
             0.0000003960315187 /)
-
-
     y = u - 0.5D0
-
     DO j = 1, SIZE(u)
         IF (ABS(y(j)) < 0.42) THEN
             r = y(j)*y(j)
@@ -54,9 +55,12 @@ FUNCTION beasley_springer_moro(u) result(x)
     END DO
 END FUNCTION beasley_springer_moro
 !==============================================================================!
-!> Returns a d-dimensional sequence of p points following a standard
-!  normal distribution
 subroutine rand_stdnormal(d, x_stdnormal)
+!==============================================================================!
+!       Discussion:
+!Returns a d-dimensional sequence of p points following a std. norm. dist.
+!Uses the intrinsic Fortran random number generator
+!==============================================================================!
 implicit none
 INTEGER(kind=4),INTENT(IN)::d
 DOUBLE PRECISION,DIMENSION(d),INTENT(OUT)::x_stdnormal     
@@ -66,7 +70,6 @@ interface
         double precision :: beasley_springer_moro(size(u))
     end function beasley_springer_moro
 end interface
-
 call random_number(x_stdnormal)
 x_stdnormal=beasley_springer_moro(x_stdnormal)
 end subroutine rand_stdnormal
