@@ -1,43 +1,41 @@
 !=============================================================================80
-!                       Metropolis Monte Carlo Grid
+!                 2D Std. Norm. Quais-Lennard-Jones Grid
 !==============================================================================!
 !       Discussion:
-!Generate a grid by treating grid points as particles and applying a modified 
-!Lennard-Jones Potential for updating their position.
-!Hard-Coded underlying distribution P(x), for demonstration purposes assume
-!a gaussian distribution. 
-!Initial distribution is generated using a gaussian-distributed sobol sequence
-!Requires the Fortran sobol.f90 module
+!Generate gridpoints (Particles) distributed via the 2D Std. Norm. Dist.
+!This grid is 'optimized' using a quasi-Lennard Jones Potential
+!Gridpoints have a quasi-regular distribution locally
+!Minimization implemented analagous to traditional MMC (beta,epsilon). 
 !==============================================================================!
 !       Modified:
 !   16 April 2019
 !       Author:
 !   Shane Flynn 
 !==============================================================================!
-module lj_mod
+module qlj_mod
 implicit none
 !==============================================================================!
 !                            Global Variables 
 !==============================================================================!
-!d              ==> Dimensionality of the ith point (x^i=x^i_1,x^i_2,..,x^i_d)
-!epsilon_lj     ==> epsilon parameter for LJ 
-!c_LJ           ==> parameter for LJ
+!d              ==>Dimensionality of the ith point (x^i=x^i_1,x^i_2,..,x^i_d)
+!epsilon_lj     ==>epsilon parameter for LJ 
+!c_LJ           ==>parameter for LJ
 !==============================================================================!
 integer::d,Npoints
 double precision::epsilon_LJ,c_LJ
-double precision, parameter::pi=acos(-1d0)
+double precision,parameter::pi=acos(-1d0)
 !==============================================================================!
 contains
 !==============================================================================!
 function random_integer(Nmin,Nmax) 
 !==============================================================================!
 !       Discussion:
-!Randomly generate an integer in the range 1-Npoints
-!       Variables:
-!Nmin           ==> minimum index value (1)
-!Nmax           ==> maximum index value (Npoints)
-!random_integer ==> integer returned
-!a              ==> Fortran intrinsic random number [0,1]
+!Randomly generate an integer in the range 1-Npoints for MMC Algorithm
+!==============================================================================!
+!Nmin           ==>minimum index value (1)
+!Nmax           ==>maximum index value (Npoints)
+!random_integer ==>integer returned
+!a              ==>Fortran intrinsic random number [0,1]
 !==============================================================================!
 implicit none
 integer::Nmin,Nmax,random_integer
@@ -49,26 +47,25 @@ end function random_integer
 function P_x(x)
 !==============================================================================!
 !       Discussion:
-!computes the distribution for the i-th particle
-!P_x            ==> evaluate P(x)
+!Target Distribution Function (Hard-Coded)
+!==============================================================================!
+!P_x            ==>evaluates P(x)
 !x_i            ==>(d) ith particles coordinate x^i_1,..,x^i_d
-!normalization factero
 !==============================================================================!
 implicit none 
 double precision::x(d),P_x
-!P_x=1.
 P_x=(2.*pi)**(-d/2.)*exp(-0.5*sum(x(:)**2))
 end function P_x
 !==============================================================================!
 function Pair_LJ_NRG(x1,x2)
 !==============================================================================!
 !       Discussion:
-!computes LJ-12-6 energy between 2 particles
-!       Variables:
-!x_i            ==>(d) ith atoms coordinates
-!x_j            ==>(d) jth atoms coordinates
-!a              ==> evaluate LJ
-!Pair_LJ_NRG    ==> Energy of the i-j LJ potential
+!quasi-LJ energy between 2 grid points
+!==============================================================================!
+!x1             ==>(d) ith atoms coordinates
+!x2             ==>(d) jth atoms coordinates
+!a/b            ==>evaluate LJ
+!Pair_LJ_NRG    ==>Energy of the i-j q-LJ potential
 !==============================================================================!
 implicit none 
 double precision::x1(d),x2(d),a,b,Pair_LJ_NRG,sigma1,sigma2
@@ -80,18 +77,17 @@ a=(sigma1**2/a)**3
 Pair_LJ_NRG=4.*epsilon_LJ*(a**2-a+b**2-b)
 end function Pair_LJ_NRG
 !==============================================================================!
-end module lj_mod
+end module qlj_mod
 !==============================================================================!
 !==============================================================================!
 program main
-use lj_mod
+use qlj_mod
 !==============================================================================!
 !               Discussion:
 !==============================================================================!
-!t_i,t_f        ==> cpu time to ~ simulation time
 !Npoints     ==> Number of Particles
-!N_iter         ==> Number of MMC steps to execute
-!beta           ==> 1/kT, inverse temperature
+!N_iter         ==>Number of MMC Iterations
+!beta           ==>Inverse Temperature
 !x              ==>(dimen) all atom coordinates
 !dimen          ==> total system dimensionality (configuration space)
 !d              ==> i-th particle dimensionality (x^i=x^i_1,x^i_2,..,x^i_d)
@@ -107,21 +103,16 @@ use lj_mod
 !t1             ==> random number for accepting higher energy movement
 !s              ==>(d) random number to move coordinate by
 !freq           ==> Interval to update mv_cutoff size
-!accept         ==> number of accepted trial moves, for acceptance~50%  
-!counter        ==> total number of moves, for acceptance~50%
-!moment_i/f     ==> the second moment of the initial and final distributions
-!ex_mom the exact moment determine from sobol sequence simulation
 !==============================================================================!
 implicit none
-integer::i,j,k,n,N_iter,accept,counter,freq
+integer::N_iter,accept,counter,freq,i,j,k,n
 integer*8::ii,skip                          !need *8 for sobol generator!
-double precision::t1,Delta_E,mv_cutoff,beta,t_i,t_f,moment_i,moment_f,ex_mom,error
-double precision,allocatable,dimension(:) :: x0,s,U_move
-double precision,allocatable,dimension(:,:) :: x,U
+double precision::t1,Delta_E,mv_cutoff,beta
+double precision,allocatable,dimension(:)::x0,s,U_move
+double precision,allocatable,dimension(:,:)::x,U
 !==============================================================================!
 !                           Read Input Data File                               !
 !==============================================================================!
-call cpu_time(t_i)
 read(*,*) Npoints
 read(*,*) d
 read(*,*) N_iter
@@ -136,28 +127,26 @@ skip=Npoints
 !==============================================================================!
 allocate(x(d,Npoints),x0(d),s(d),U(Npoints,Npoints),U_move(Npoints))
 !==============================================================================!
-!                           Generate Initial State
-!use multivariant gaussian distribution (quasi random sequence)  to generate
-!initial sequence, assume Nparticels*d configuration space (dimen)
-!i.e.   x=([x_1,x_2,..,x_d],[x_1,x_2,..,x_d],..[x_1,x_2,..,x_d])
+!                       Generate Initial Distribution
+!               Initally accept any point where Potential<Ecut
 !==============================================================================!
-open(unit=16,file='coor_ini.dat')
-do ii=1,Npoints
-    call sobol_stdnormal(d,skip,x(:,ii))
-    write(16,*) x(:,ii)
+i=1
+do while(i.le.Npoints)   
+    call random_number(s)
+    x(:,i)=s(:)
+    i=i+1            
 enddo
-close(16)
 !==============================================================================!
-!               Compute second moment of sobol distribution   <|x|2> 
+!                          Write Initial Coordinates
 !==============================================================================!
-moment_i=0d0
+open(unit=17,file='coor_ini.dat')
 do i=1,Npoints
-    moment_i=moment_i+sum(x(:,i)**2)
+    write(17,*) x(:,i)
 enddo
-moment_i=moment_i/Npoints
-write(*,*) 'moment ', moment_i
+close(17)
+write(*,*) 'Test 2; Successfully generated initial grid' 
 !==============================================================================!
-!                               Compute U[x_ij] 
+!                             Compute U[x_ij] 
 !compute pairwise energies for the entire set of initial particle 
 !==============================================================================!
 do i=2,Npoints
@@ -248,7 +237,6 @@ enddo
 !==============================================================================!
 !                               output file                                    !
 !==============================================================================!
-call cpu_time(t_f)
 open(90,file='simulation.dat')
 write(90,*) 'Npoints ==> ', Npoints
 write(90,*) 'particle dimensionality ==> ', d
@@ -256,10 +244,6 @@ write(90,*) 'Number of MMC Iterations ==> ', N_iter
 write(90,*) 'epsilon LJ ==> ', epsilon_LJ 
 write(90,*) 'c_LJ ==> ', c_LJ
 write(90,*) 'Final Move Cutoff ==> ', mv_cutoff
-write(90,*) 'Moment Sobol Dist.', moment_i
-write(90,*) 'Moment final Dist.', moment_f
-write(90,*) 'Moment Error', error
-write(90,*) 'Total Time ==> ', t_f-t_i
 close(90)
 write(*,*) 'Hello Universe!'
 end program main

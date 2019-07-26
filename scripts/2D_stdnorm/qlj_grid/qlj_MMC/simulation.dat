@@ -1,0 +1,6 @@
+ Npoints ==>          500
+ particle dimensionality ==>            2
+ Number of MMC Iterations ==>      1000000
+ epsilon LJ ==>    1000.0000000000000     
+ c_LJ ==>    1.0000000000000000     
+ Final Move Cutoff ==>    1.0685379731271235E-007

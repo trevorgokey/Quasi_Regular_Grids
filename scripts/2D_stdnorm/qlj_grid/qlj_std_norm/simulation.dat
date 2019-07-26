@@ -1,0 +1,9 @@
+ Npoints ==>          256
+ particle dimensionality ==>            2
+ Number of MMC Iterations ==>      1000000
+ c_LJ ==>    1.0000000000000000     
+ Final Move Cutoff ==>    1.8105134635210587E-002
+ Moment Sobol Dist.   1.9899656309575924     
+ Moment final Dist.                       NaN
+ Moment Error                       NaN
+ Total Time ==>    35.525824000000000     
