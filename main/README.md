@@ -1,8 +1,7 @@
 # Program Main:
-2D Morse Oscillator Implementation
+3D Morse Oscillator Implementation
 
 A Quasi-Regular grid is generated according to our target distribution P(x).
-This grid is then used for generating a symmetric
 
 ## Overview:
 A quick summary of the various pieces of code available. 

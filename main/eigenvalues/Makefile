@@ -3,8 +3,8 @@
 #-O0=no optimization,-O3=full optimization
 #==============================================================================#
 FC=gfortran 
-#FFLAGS=-O2
-FFLAGS= -g -O0 -Wall -Wextra -pedantic -fcheck=all -fbacktrace 
+FFLAGS=-O2
+#FFLAGS= -g -O0 -Wall -Wextra -pedantic -fcheck=all -fbacktrace 
 #==============================================================================#
 #			   	Targets 
 #==============================================================================#
@@ -17,7 +17,8 @@ all: dgb
 #==============================================================================#
 #				DGB Cluster
 #==============================================================================#
-dgb: QRGB2.o sobol.o sobol_stdnormal.o
+dgb: QRGB_nD.o gen_hermite_rule.o 
+#dgb: GHQ_3D.o gen_hermite_rule.o 
 	$(FC) -o $@ $^  -llapack
 #==============================================================================#
 clean:
