@@ -1,0 +1,8 @@
+8-2-19
+
+This code is the most recent working version from Dropbox, however, it uses P(x) to distribute gaussian widths
+(opposed to using nearest neighbor to define alpha)
+
+I should keep this version!!!!!
+
+needs genhermiterule
