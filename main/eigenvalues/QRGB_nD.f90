@@ -1,0 +1,226 @@
+!=============================================================================80
+!                      3D Morse Code with qLJ Basis 
+!==============================================================================!
+!       Discussion:
+!Quasi-Regular Gaussian Basis
+!using optimized grid solve generalized eigenvalue problem
+!compute gaussian width using nearest neighbor
+!==============================================================================!
+!       Modified:
+!   15 May 2019
+!       Author:
+!   Shane Flynn 
+!==============================================================================!
+module QRGB_mod
+implicit none
+!==============================================================================!
+!                            Global Variables 
+!==============================================================================!
+!d              ==> Gaussian dimensionality 
+!==============================================================================!
+integer::d
+!==============================================================================!
+contains
+!==============================================================================!
+function V(x)
+!==============================================================================!
+!       Discussion:
+!Hard-coded Morse Potential Energy 
+!==============================================================================!
+implicit none
+double precision::x(d),V
+double precision,parameter::omega(3)=(/0.2041241,0.18371169,0.16329928/)
+double precision,parameter::D_morse=12.
+V=D_morse*sum((exp(-omega(:)*x(:))-1.)**2 )
+end function V
+!==============================================================================!
+end module QRGB_mod
+!==============================================================================!
+program main
+use QRGB_mod
+!==============================================================================!
+!       Discussion:
+!==============================================================================!
+!d              ==> i-th gaussian dsionality (x^i=x^i_1,x^i_2,..,x^i_d)
+!NG             ==> Number of basis functions
+!x              ==>(d) all atom coordinates
+!x_ij           ==> i-jth gaussian center
+!==============================================================================!
+implicit none
+logical::unif_grid
+character(len=50)::grid_in,theory_in
+integer::NG,GH_order,i,j,k,ll
+double precision::aij,r2,alpha0,Vij,RCN
+double precision,parameter::pi=4.*atan(1d0)
+double precision,allocatable,dimension(:)::alpha,eigenvalues,x_ij,z,w,rr,l
+double precision,allocatable,dimension(:,:)::x,Smat,Hmat
+!==============================================================================!
+!                       LLAPACK dsygv variables                                !
+!==============================================================================!
+integer::itype,info,lwork
+double precision,allocatable,dimension(:)::work
+!==============================================================================!
+!                           Read Input Data File                               !
+!==============================================================================!
+read(*,*) d
+read(*,*) NG
+read(*,*) GH_order
+read(*,*) grid_in
+read(*,*) theory_in
+read(*,*) unif_grid
+read(*,*) alpha0
+!==============================================================================!
+!                               Allocations
+!==============================================================================!
+allocate(x(d,NG),x_ij(d),rr(d),alpha(NG),eigenvalues(NG),Smat(NG,NG))
+allocate(Hmat(NG,NG),z(GH_order),w(GH_order),l(d))
+write(*,*) 'Test 0; Successfully Read Input File'
+!==============================================================================!
+!                           Read GridPoints x(d,NG)
+!==============================================================================!
+open(90,File=grid_in)
+do i=1,NG
+    read(90,*) x(:,i)
+enddo 
+close(90)
+!==============================================================================!
+!                       Generate Alphas alpha(NG)
+!==============================================================================!
+if(unif_grid.EQV..TRUE.)then
+    alpha=alpha0
+    write(*,*) 'Test 1; Uniform Grid, Alpha:=Constant'
+else
+    do i=1,NG
+        alpha(i)=1d20
+        do j=1,NG
+            if(j.ne.i) then
+                r2=sum((x(:,i)-x(:,j))**2)
+                if(r2<alpha(i)) alpha(i)=r2
+            endif
+        enddo
+        alpha(i)=alpha0/alpha(i)
+    enddo
+    write(*,*) 'Test 1; Successfully Generated Alphas for QLJ Grid'
+endif
+!==============================================================================!
+!                          Write Alphas to File 
+!==============================================================================!
+open(unit=91,file='alphas.dat')
+do i=1,NG
+    write(91,*) alpha(i)
+enddo
+close(91)
+!==============================================================================!
+!                           Overlap Matrix (S)
+!==============================================================================!
+do i=1,NG
+    do j=i,NG
+         aij=alpha(i)*alpha(j)/(alpha(i)+alpha(j))
+         r2=sum((x(:,i)-x(:,j))**2)
+!note this expression is different than 2D case, look into this
+         Smat(i,j)=(2*sqrt(alpha(i)*alpha(j))/(alpha(i)+alpha(j)))**(0.5*d)&
+             *exp(-aij*r2)
+       Smat(j,i)=Smat(i,j)
+    enddo
+enddo
+!==============================================================================!
+!                   Check to see if S is positive definite
+!If this is removed, you need to allocate llapack arrays before Hamiltonian 
+!==============================================================================!
+lwork=max(1,3*NG-1)
+allocate(work(max(1,lwork)))
+call dsyev('v','u',NG,Smat,NG,eigenvalues,work,Lwork,info)
+write(*,*) 'Info (Initial Overlap Matrix) ==> ', info
+RCN = eigenvalues(1)/eigenvalues(NG)
+write(*,*) 'RCN =', RCN
+open(unit=92,file='overlap_eigenvalues.dat')
+do i=1,NG
+    write(92,*) eigenvalues(i)
+enddo
+close(19)
+write(*,*) 'Test 2; Overlap Matrix is Positive Definite'
+!==============================================================================!
+!             Use Gauss Hermit quadrature to evaluate the potential matrix
+!               z(GH-order) w(GH-order) --- quadrature points and weights
+!==============================================================================!
+call cgqf(GH_order,6,0d0,0d0,0d0,1d0,z,w)
+!note this is different than 2D case
+w=w/sqrt(pi)  
+!==============================================================================!
+!                   Solve Generalized Eigenvalue Problem
+!==============================================================================!
+do i=1,NG
+  do j=i,NG
+     aij=alpha(i)*alpha(j)/(alpha(i)+alpha(j))
+     r2=sum((x(:,i)-x(:,j))**2)
+     Smat(i,j)=(2*sqrt(alpha(i)*alpha(j))/(alpha(i)+alpha(j)))**(0.5*d)&
+         *exp(-aij*r2)   
+     Smat(j,i)=Smat(i,j)
+     ! kinetic energy:
+!different than 2D case, look into this
+     Hmat(i,j)=aij*(d-2*aij*r2)
+     ! potential energy Vij matrix element
+     x_ij(:)=(alpha(i)*x(:,i)+alpha(j)*x(:,j))/(alpha(i)+alpha(j))
+     Vij=0d0
+     l(:)=1
+     do ll=1,GH_order**d
+        do k=1,d
+           rr(k)=z(l(k))
+        enddo
+        rr=x_ij+rr/sqrt(alpha(i)+alpha(j))
+        r2=V(rr)
+        do k=1,d
+           r2=r2*w(l(k))
+        enddo
+        Vij=Vij+r2
+        do k=1,d
+           l(k)=mod(l(k),GH_order)+1
+           if(l(k).ne.1) exit
+        enddo
+     end do
+     ! kinetic + potential energy
+     Hmat(i,j)=(Hmat(i,j)+Vij)*Smat(i,j)
+     Hmat(j,i)=Hmat(i,j)
+  enddo
+enddo
+itype=1
+call dsygv(itype,'n','u',NG,Hmat,NG,Smat,NG,eigenvalues,work,Lwork,info)
+write(*,*) 'info ==> ', info
+open(unit=21,file='eigenvalues.dat')
+write(21,*) alpha0, eigenvalues(:)
+close(21)
+!==============================================================================!
+!                              Exact Eigenvalues
+!==============================================================================!
+open(25,File=theory_in)
+open(unit=73,file='abs_error.dat')
+open(unit=74,file='rel_error.dat')
+open(unit=75,file='alpha_abs_error.dat')
+open(unit=76,file='alpha_rel_error.dat')
+do i=1,NG
+   read(25,*) r2
+   write(73,*) i, abs(r2-eigenvalues(i))
+   write(74,*) i, (eigenvalues(i)-r2)/r2
+   write(75,*) alpha0, abs(r2-eigenvalues(i))
+   write(76,*) alpha0, (eigenvalues(i)-r2)/r2
+enddo
+close(73)
+close(74)
+close(75)
+close(76)
+close(25)
+!==============================================================================!
+!                               output file                                    !
+!==============================================================================!
+open(90,file='simulation.dat')
+write(90,*) 'dimensionality ==> ', d
+write(90,*) 'NG ==> ', NG
+write(90,*) 'Integral_P==>', integral_P
+write(90,*) 'c LJ==>', c_LJ
+write(90,*) 'Ecut ==>', E_cut
+write(90,*) 'alpha0==>', alpha0
+write(90,*) 'RCN Overlap Matrix==>', RCN
+write(90,*) 'GH Order==>', GH_order
+close(90)
+write(*,*) 'Hello Universe!'
+end program main
