@@ -1,0 +1,7 @@
+2                       !d:                 dimensionality of your gridpoints
+482                     !NG:                number of gridpoints
+10                      !GH_order           order for the Gauss Hermite Quadriture
+grid.dat                !grid_in:           input gridpoints
+all_theory.dat          !theory_in:         ordered theory eigenvalues for 2D Morse
+.False.                 !unif_grid          Logical, if true use uniform grid
+2                       !alpha0             alpha scaling parameter 
