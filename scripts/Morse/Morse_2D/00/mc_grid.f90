@@ -2,12 +2,8 @@
 !                       Metropolis Monte Carlo Code Grid
 !==============================================================================!
 !       Discussion:
-!Compute distribion and eigenvalues for 2D morse as described in Garaschuk
-!       TODO:
-!==============================================================================!
-!normalize PX                                   !DONE
-!Generate Initial Distribution                  !DONE
-!Remove single particle potential,epsilon,beta  !DONE
+!generate 2D morse quasi-regular grid
+!this is the first attempt at gettign the code working, results look promising
 !==============================================================================!
 !       Modified:
 !   30 April 2019
