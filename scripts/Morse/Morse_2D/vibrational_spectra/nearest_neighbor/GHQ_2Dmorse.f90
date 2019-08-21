@@ -4,6 +4,7 @@
 !Quasi-Regular Grid for computing vibrational spectra
 !generate alpha based on nearest neghbor
 !see distribtuion code for alpha as a funciton of the target distribution
+!This code needs the gen_hermite_rule.f90 code (Gauss-Hermite-Quadriture)
 !==============================================================================!
 !       Modified:
 !   19 May 2019
