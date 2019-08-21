@@ -2,7 +2,8 @@
 !                    2D Morse with Gauss Hermite Quadrature 
 !Code reads in grid and alphas and computes the associated eigenvalues
 !Grid and alphas need to be generated elsewhere and provided here
-! use gamma=1 and no longer use Delta parameter
+!no Delta parameter
+!needs teh gen_hermite_rule.f90 code for GHQ
 !==============================================================================!
 !       Modified:
 !   19 May 2019
@@ -24,6 +25,9 @@ function V(x)
 !       Discussion:
 !Hard-coded Morse Potential Energy 
 !==============================================================================!
+!x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
+!V              ==>evaluate V(x)
+!==============================================================================!
 implicit none
 double precision::x(d),V
 double precision,parameter::omega(2)=(/0.2041241,0.18371169/)
@@ -36,12 +40,17 @@ function P(x)
 !       Discussion:
 !Target Distribution Function
 !==============================================================================!
+!P              ==>evaluate P(x)
+!x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
+!integral_P     ==>Normalization factor for P(x)
+!Del_par        ==>Delta parameter for P(x) distribution, :=10% of Ecut
+!==============================================================================!
 implicit none
 double precision::x(d),P
 !double precision,parameter::Delta=0.1
 if(V(x)<E_cut) then
-   P=(E_cut-V(x))/integral_P
 !   P=(E_cut*(1+Delta)-V(x))/integral_P
+   P=(E_cut-V(x))/integral_P
 else        !set equal to 0 if beyond Ecut
    P=1d-20
 end if

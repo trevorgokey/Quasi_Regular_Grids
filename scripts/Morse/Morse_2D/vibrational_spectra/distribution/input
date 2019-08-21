@@ -7,4 +7,4 @@ all_theory.dat          !theory_in:         ordered theory eigenvalues for 2D Mo
 .False.                 !unif_grid          Logical, if true use uniform grid
 11.5                    !E_cut              contour cutoff
 1                       !c_LJ               QLJ parameter
-1                       !alpha0             alpha scaling parameter 
+0.6                       !alpha0             alpha scaling parameter 
