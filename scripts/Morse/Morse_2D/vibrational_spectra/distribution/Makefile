@@ -3,8 +3,8 @@
 #-O0=no optimization,-O3=full optimization
 #==============================================================================#
 FC=gfortran 
-FFLAGS=-O2
-#FFLAGS= -g -O0 -Wall -Wextra -pedantic -fcheck=all -fbacktrace 
+#FFLAGS=-O2
+FFLAGS= -g -O0 -Wall -Wextra -pedantic -fcheck=all -fbacktrace 
 #==============================================================================#
 #			   	Targets 
 #==============================================================================#
@@ -21,4 +21,4 @@ dgb: GHQ_2Dmorse.o gen_hermite_rule.o
 	$(FC) -o $@ $^  -llapack
 #==============================================================================#
 clean:
-	rm -rf *.o *.mod eigenvalues.dat overlap_eigenvalues.dat simulation.dat abs_error.dat rel_error.dat alphas.dat dgb
+	rm -rf *.o *.mod dgb
