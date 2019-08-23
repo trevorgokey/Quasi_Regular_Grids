@@ -1,7 +1,0 @@
-This is the 2D morse code using sobol integration
-It gives the correct answer for the calculations 
-(Vlad thinks the normalizatiopn for this code is wrong)
-
-this is the final working version of the sobol code since we are no longer using this formulation for the project 
-I need to comment this directory and save to github
-This is the only version of this code (taken from Dropbox) I do not need nay others

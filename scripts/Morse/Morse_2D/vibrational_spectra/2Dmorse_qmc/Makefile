@@ -17,9 +17,8 @@ all: dgb
 #==============================================================================#
 #				DGB Cluster
 #==============================================================================#
-dgb: QRGB2.o sobol.o sobol_stdnormal.o
-#dgb: QRGB_GHQ.o gen_hermite_rule.o sobol.o sobol_stdnormal.o
+dgb: 2Dmorse_qmc.o sobol.o sobol_stdnormal.o
 	$(FC) -o $@ $^  -llapack
 #==============================================================================#
 clean:
-	rm -rf *.o *.mod eigenvalues.dat overlap_eigenvalues.dat simulation.dat dgb
+	rm -rf *.o *.mod dgb

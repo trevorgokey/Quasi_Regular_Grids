@@ -1,12 +1,11 @@
 !=============================================================================80
-!                       Metropolis Monte Carlo Code Grid
-!5-14-19 This is the working version of 2D morse using our generalized approach
-!all the calculaitons with less accuracy the garaschuk were done with this code
+!                       2D Morse with Quasi-Monte Carlo
 !==============================================================================!
 !       Discussion:
 !Quasi-Regular Gaussian Basis
 !using optimized grid solve generalized eigenvalue problem
-!implement alpha calculation in this code and plot error as a function of alpha
+!this code computes the potential using quasi Monte Carlo (not GHQ)
+!note, this has not been tested for 3D morse, may not have correct dimen-scaling
 !==============================================================================!
 !       Modified:
 !   1 May 2019
@@ -16,73 +15,82 @@
 module QRGB_mod
 implicit none
 !==============================================================================!
-!                            Global Variables 
+!                            Global Variables
 !==============================================================================!
-!d              ==> Gaussian dsionality
+!d              ==>i-th gaussian dsionality (x^i=x^i_1,x^i_2,..,x^i_d)
+!integral_P     ==>Normalization factor for P(x) (from Grid Generation)
+!E_cut          ==>Energy Cutoff Contour    (be consistent with Grid Generation)
+!c_LJ           ==>Lennard-Jones parameter  (be consistent with Grid Generation)
 !==============================================================================!
 integer::d,NG
-double precision,parameter::D_morse=12.
-double precision,parameter::c_x=0.2041241
-double precision,parameter::c_y=0.18371169
 double precision::E_cut,c_LJ,integral_P
 !==============================================================================!
 contains
 !==============================================================================!
-function P_x(x_i)
+function P(x)
 !==============================================================================!
-!       Discussion:
 !Target Distribution Function
-!P_x            ==> evaluate P(x)
-!x_i            ==>(d) ith particles coordinate x^i_1,..,x^i_d
-!Del_par        ==> Delta parameter for P(x) distribution, :=10% of Ecut
-!integral_P     ==> Normalization factor for P(x)
-!They set gamma=1 in the paper so I will just ignore it here
+!==============================================================================!
+!P              ==>evaluate P(x)
+!x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
+!Delta          ==>Delta parameter for P(x) distribution, :=10% of Ecut
 !==============================================================================!
 implicit none 
-double precision::Del_par,x_i(d),P_x
-Del_par=0.01*E_cut
-if(Potential(x_i)<E_cut) then
-   P_x=(E_cut+Del_par-Potential(x_i))/integral_P
-else        !set equal to 0 if beyond Ecut
-   P_x=1d-8
+double precision::Delta,x(d),P
+Delta=0.01*E_cut
+if(Potential(x)<E_cut) then
+   P=(E_cut+Delta-Potential(x))/integral_P
+else                                              !set equal to 0 if beyond Ecut
+   P=1d-20
 end if
-end function P_x
-!==============================================================================!
+end function P
 !==============================================================================!
 function Potential(x)
 !==============================================================================!
-!       Discussion:
 !Hard-coded Morse Potential Energy 
+!==============================================================================!
+!x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
+!Potential      ==>evaluate Potential(x)
+!D_morse        ==>Parameter for Morse Potential
+!c_x/c_y        ==>(d) Parameter for Morse Potential
 !==============================================================================!
 implicit none
 double precision::x(d),Potential
+double precision,parameter::D_morse=12.
+double precision,parameter::c_x=0.2041241
+double precision,parameter::c_y=0.18371169
 Potential=D_morse*((exp(-c_x*x(1))-1)**2+(exp(-c_y*x(2))-1)**2)
 end function Potential
 !==============================================================================!
 end module QRGB_mod
+!==============================================================================!
+!==============================================================================!
 program main
 use QRGB_mod
 !==============================================================================!
 !       Discussion:
 !==============================================================================!
-!d              ==> i-th gaussian dsionality (x^i=x^i_1,x^i_2,..,x^i_d)
-!NG             ==> Number of basis functions
-!x              ==>(d) all atom coordinates
-!x0             ==>(d) store previous coordinate before trial move
-!freq           ==> Interval to update mv_cutoff size
-!accept         ==> number of accepted trial moves, for acceptance~50%  
-!counter        ==> total number of moves, for acceptance~50%
-!x2 ith gaussians coordinates for matrix elements
-!z integration sequence form matrix elements
-!x_ij= i-jth gaussian center
-!z=sequence for integration
-!t_i,t_f        ==> cpu time to ~ simulation time
+!grid_in        ==>Filename Containing Gridpoints, see qlj_morse2d_grid.f90
+!theory_in      ==>Filename Containing Analytic Eigenvalues, see theory.f90
+!Nsobol         ==>Number of sobol points for qMC integration
+!skip           ==>Seed for sobol generator
+!NG             ==>Number of Gaussian Basis Functions (gridpoints)
+!alpha0         ==>Flat Scaling Parameter for Gaussian Widths
+!alpha          ==>(d) Gaussian Widths
+!RCN            ==>Recriprical Convergence Number, stability of Overlap Matrix
+!x              ==>(d) ith atoms coordinates
+!x_ij           ==>i-jth gaussian center (product of Gaussians is a Gaussian)
+!Smat           ==>(NG,NG) Overlap Matrix
+!Vmat           ==>(NG,NG) Potential Matrix
+!Hmat           ==>(NG,NG) Hamiltonian Matrix
+!z              ==>sequence for matrix elements integration
+!data_freq      ==>Interval to evaluate qMC integration
 !==============================================================================!
 implicit none
 character(len=50)::grid_in,theory_in
-integer::Nsobol,data_freq,n,i,j,counter,l
+integer::Nsobol,data_freq,counter,i,j,l,n
 integer*8::skip
-double precision::time1,time2,aij,r2,alpha0
+double precision::aij,r2,alpha0
 double precision,allocatable,dimension(:)::alpha,eigenvalues,x_ij,theory
 double precision,allocatable,dimension(:,:)::x,Smat,z,Vmat,Hmat
 !==============================================================================!
@@ -93,7 +101,6 @@ double precision,allocatable,dimension(:)::work
 !==============================================================================!
 !                           Read Input Data File                               !
 !==============================================================================!
-call cpu_time(time1)
 read(*,*) d
 read(*,*) NG
 read(*,*) Nsobol
@@ -104,7 +111,6 @@ read(*,*) c_LJ
 read(*,*) grid_in
 read(*,*) theory_in
 read(*,*) data_freq
-
 Nsobol=Nsobol/data_freq
 Nsobol=Nsobol*data_freq
 write(*,*) 'data_freq=',data_freq, '  Nsobol=',Nsobol
@@ -118,20 +124,20 @@ write(*,*) 'Test 0; Successfully Read Input File'
 !==============================================================================!
 !                           Input GridPoints x(d,NG)
 !==============================================================================!
-open(16,File=grid_in)
+open(17,File=grid_in)
 do n=1,NG
-    read(16,*) x(:,n)
+    read(17,*) x(:,n)
 enddo 
-close(16)
+close(17)
 !==============================================================================!
 !                          Generate Alpha Scaling 
 !==============================================================================!
-open(unit=17,file='alphas.dat')
+open(unit=18,file='alphas.dat')
 do i=1,NG
-    alpha(i)=alpha0/(c_LJ*(P_x(x(:,i))*NG)**(-1./d))**2
-    write(17,*) alpha(i)
+    alpha(i)=alpha0/(c_LJ*(P(x(:,i))*NG)**(-1./d))**2
+    write(18,*) alpha(i)
 enddo
-close(17)
+close(18)
 write(*,*) 'Test 3; Successfully Generated Gaussian Widths'
 !==============================================================================!
 !                           Overlap Matrix (S)
@@ -149,18 +155,16 @@ enddo
 !                   Check to see if S is positive definite
 !If this is removed, you need to allocate llapack arrays before Hamiltonian 
 !==============================================================================!
-!lwork=-1
-!lwork=3400
 lwork=max(1,3*NG-1)
 allocate(work(max(1,lwork)))
 call dsyev('v','u',NG,Smat,NG,eigenvalues,work,Lwork,info)
-!write(*,*) 'lwork', lwork
 write(*,*) 'Info (Initial Overlap Matrix) ==> ', info
 open(unit=19,file='overlap_eigenvalues.dat')
 do i=1,NG
     write(19,*) eigenvalues(i)
 enddo
 close(19)
+write(*,*) 'RCN = ', eigenvalues(1)/eigenvalues(NG)
 write(*,*) 'Test 4; Overlap Matrix is Positive Definite'
 !==============================================================================!
 !                   Generate Sequence For Evaluating Potential
@@ -172,17 +176,17 @@ write(*,*) 'Test 5; Successfully Generated Integration Sequence'
 !==============================================================================!
 !                              Theory Eigenvalues Value 
 !==============================================================================!
-open(25,File=theory_in)
+open(21,File=theory_in)
 do i=1,NG
-    read(25,*) theory(i)
+    read(21,*) theory(i)
 enddo 
-close(25)
+close(21)
 !==============================================================================! 
 !                             Evaluate Potential
 !==============================================================================!
 Vmat=0d0
-open(unit=21,file='eigenvalues.dat')
-open(unit=73,file='abs_error.dat')
+open(unit=22,file='eigenval_conv.dat')
+open(unit=23,file='abs_error_conv.dat')
 do counter=1,Nsobol/data_freq
    do i=1,NG
       do j=i,NG
@@ -203,9 +207,13 @@ do counter=1,Nsobol/data_freq
          Smat(i,j)=(alpha(i)*alpha(j))**(d/4.)*(alpha(i)+alpha(j))**(-0.5*d)&
              *exp(-0.5*aij*r2)
          Smat(j,i)=Smat(i,j)
-         ! kinetic energy:
+!==============================================================================!
+!                          Kinetic Energy Matrix
+!==============================================================================!
          Hmat(i,j)=0.5*aij*(d-aij*r2)
-         ! kinetic + potential energy
+!==============================================================================!
+!                      Hamiltonian = Kinetic + Potential
+!==============================================================================!
          Hmat(i,j)=(Hmat(i,j)+Vmat(i,j)/(counter*data_freq))*Smat(i,j)
          Hmat(j,i)=Hmat(i,j)
       enddo
@@ -213,21 +221,32 @@ do counter=1,Nsobol/data_freq
    itype=1
    eigenvalues=0d0
    call dsygv(itype,'n','u',NG,Hmat,NG,Smat,NG,eigenvalues,work,Lwork,info)
-   write(21,*) alpha0, eigenvalues(:)
-   write(73,*) alpha0, abs(theory(:)-eigenvalues(:))
+   write(22,*) alpha0, eigenvalues(:)
+   write(23,*) alpha0, abs(theory(:)-eigenvalues(:))
    write(*,*) 'info ==> ', info
 enddo
-close(21)
-close(73)
+close(22)
+close(23)
+open(unit=24,file='rel_error.dat')
+open(unit=25,file='alpha_rel.dat')
+do i=1,NG
+    write(24,*) i, (eigenvalues(i)-theory(i))/theory(i)
+    write(25,*) alpha0, (eigenvalues(i)-theory(i))/theory(i)
+enddo
+close(23)
+close(25)
 !==============================================================================!
 !                               output file                                    !
 !==============================================================================!
-call cpu_time(time2)
 open(90,file='simulation.dat')
 write(90,*) 'particle dsionality ==> ', d
 write(90,*) 'NG ==> ', NG
 write(90,*) 'Nsobol==>', Nsobol
-write(90,*) 'Total Time ==> ', time2-time1
+write(90,*) 'Data Frequency==>', Data_Freq
+write(90,*) 'alpha 0==>', alpha0
+write(90,*) 'integral_P==>', integral_P 
+write(90,*) 'Ecut==>', E_cut
+write(90,*) 'c_LJ ==>', c_LJ
 close(90)
 write(*,*) 'Hello Universe!'
 end program main
