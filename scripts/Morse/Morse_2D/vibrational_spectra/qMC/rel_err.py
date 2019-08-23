@@ -2,12 +2,12 @@
 #               Distributed Gaussian Basis (Eigen Error Analysis)
 #==============================================================================#
 #       Discussion:
-#Python 2 script for computing relative error for the final iteration of eigenvalues
+#Python script for computing relative error for the final iteration of eigenvalues
 #'Theory' values are passed in (computed elsewhere, already sorted)
 #Error is taken as (calc-theory)/theory
-# first column is assumed to be x axis (alpha0 or some other value, not an 
+#first column is assumed to be x axis (alpha0 or some other value, not an 
 #eigenvalue
-#also assume only thoery resutls is a column of data
+#also assume only theory resutls is a column of data
 #==============================================================================#
 #       Modified:
 #   8 May 2019
