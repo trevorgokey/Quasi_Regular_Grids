@@ -1,11 +1,12 @@
 #=============================================================================80
-#               Distributed Gaussian Basis (Eigen Error Analysis)
-#python code for computing and sorting all 2dmorse eigenvalues in 1 script
-#current code gives different results compared to fortran after 6 decimals, 
-#need to figure out why there is a descrepancy, use this coe at your own risk!
+#                           2D Morse Eigenvalues
+#=============================================================================80
+#Compute Eigenvalues for the 2D Morse Oscillator (Analytic Expression)
+#The eigenvalues will become negative due to the decreasing distance between 
+#energy states at higher excitations (After 24 excitations in 1D). 
 #==============================================================================#
-#       Discussion:
-#Compute and sort eigenvalues for the 2D Morse Oscillator (analytic)
+#current code gives different results compared to fortran after ~6 decimals, 
+#need to figure out why there is a descrepancy, Use this code at your own risk!!
 #==============================================================================#
 #       Modified:
 #   5 May 2019
@@ -28,8 +29,10 @@ eigx=[]
 eigy=[]
 eigs=[]
 for i in range(0,NB):
-    eigx.append(np.float(ax*np.sqrt(2.*D_morse)*(i+0.5)-((ax*np.sqrt(2.*D_morse)*(i+0.5))**2/(4.*D_morse))))
-    eigy.append(np.float(ay*np.sqrt(2.*D_morse)*(i+0.5)-((ay*np.sqrt(2.*D_morse)*(i+0.5))**2/(4.*D_morse))))
+    eigx.append(np.float(ax*np.sqrt(2.*D_morse)*(i+0.5)- \
+            ((ax*np.sqrt(2.*D_morse)*(i+0.5))**2/(4.*D_morse))))
+    eigy.append(np.float(ay*np.sqrt(2.*D_morse)*(i+0.5)- \
+            ((ay*np.sqrt(2.*D_morse)*(i+0.5))**2/(4.*D_morse))))
 print eigx
 print eigy
 #==============================================================================#

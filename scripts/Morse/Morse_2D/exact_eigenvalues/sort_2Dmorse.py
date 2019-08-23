@@ -13,7 +13,6 @@ import pandas as pd
 import numpy as np
 from sys import argv
 #==============================================================================#
-#               Discussion:
 #script             ==> Name of THIS Python script
 #theory_values      ==> datafile containing 2Dmorse eigenvalues combinatorics
 #df_theory          ==> dataframe for theory_values
@@ -33,7 +32,7 @@ df_sort=df_sort.reset_index(drop=True)
 print('Sorted Theory')
 print df_sort.head()
 #==============================================================================!
-#                       Write Data to CSV File
+#                           Write Data to CSV File
 #==============================================================================!
 df_sort.to_csv('2Dmorse_sorted.dat',sep='\t',index=False,header=None)
 print('Hello Universe!')
