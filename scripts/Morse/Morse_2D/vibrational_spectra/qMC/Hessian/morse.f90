@@ -1,13 +1,14 @@
 !=============================================================================80
-!                       Metropolis Monte Carlo Code Grid
+!                     Metropolis Monte Carlo Code Grid
 !==============================================================================!
 !       Discussion:
 !using optimized grid solve generalized eigenvalue problem
-!       TODO:
-!get this code working
-!==============================================================================!
-!omegas can all be the same value (set=1) since our basis can be symmetric 
+!omegas can all be the same value (set=1) since our basis is symmetric 
 !gaussians now due to spacing between gridpoints
+!integrals computed iwht quasi Monte Carlo
+!==============================================================================!
+!This code is intended to use real coordinates vi mass scaling and a Hessian
+!This is just a template code, not tested, use at your own risk!!!
 !==============================================================================!
 !       Modified:
 !   1 May 2019
@@ -19,7 +20,7 @@ implicit none
 !==============================================================================!
 !                            Global Variables 
 !==============================================================================!
-!d              ==> Gaussian dsionality
+!d              ==>Gaussian dimensionality
 !==============================================================================!
 integer::d,NG,Natoms
 character(len=2),allocatable::atom_type(:)
@@ -134,6 +135,7 @@ do i=d,1,-1
     write(*,*) omega(i), 'normalized = 1?', sum(U(:,i)**2)
 enddo
 end subroutine Freq_Hess
+!==============================================================================!
 end module dgb_mod
 !==============================================================================!
 !==============================================================================!
@@ -147,7 +149,6 @@ use dgb_mod
 !x              ==>(d) all atom coordinates
 !U              ==>(NG,NG) All i,j pair-wise energies (LJ-12-6)
 !x0             ==>(d) store previous coordinate before trial move
-!freq           ==> Interval to update mv_cutoff size
 !accept         ==> number of accepted trial moves, for acceptance~50%  
 !counter        ==> total number of moves, for acceptance~50%
 !x2 ith gaussians coordinates for matrix elements
@@ -267,7 +268,6 @@ do while(counter.lt.Nsobol/data_freq)
     do i=1,NG
         do j=i,NG
             x_ij(:)=(alpha(i)*x(:,i)+alpha(j)*x(:,j))/(alpha(i)+alpha(j))
-!            write(*,*) 'x_ij', x_ij(:)
             do l=1+(counter*data_freq),(counter+1)*data_freq
                 x2(:)=x_ij(:)+z(:,l)/sqrt(omega(:)*(alpha(i)+alpha(j)))
 !==============================================================================!
@@ -303,37 +303,15 @@ do while(counter.lt.Nsobol/data_freq)
         counter=counter + 1
 enddo
 close(21)
-!!==============================================================================!
-!!                       Theorectical Eigenvalues 2D Morse
-!!==============================================================================!
-!open(unit=22,file='theory.dat')
-!do i=0,NG
-!    do j=0,NG
-!        write(22,*) omega(1)*(0.5+i) - (omega(1)*(i+0.5))**2/(4.*D_morse)+&
-!            & (omega(2)*(0.5+i) - (omega(2)*(j+0.5))**2/(4.*D_morse))
-!    enddo
-!enddo
-!close(22)
-!!==============================================================================!
-!!                               output file                                    !
-!!==============================================================================!
+!==============================================================================!
+!                               output file                                    !
+!==============================================================================!
 call cpu_time(time2)
-!open(90,file='simulation.dat')
-!write(90,*) 'particle dsionality ==> ', d
-!write(90,*) 'NG ==> ', NG
-!write(90,*) 'P(x) Normalization ==> ', integral_P
-!write(90,*) 'P_x Normalization Iterations (N_Px) ==> ', N_Px
-!write(90,*) 'NMC Iterations for Grid ==> ', NMC
-!write(90,*) 'Nsobol==>', Nsobol
-!write(90,*) 'c_LJ ==> ', c_LJ
-!write(90,*) 'E_cut ==> ', E_cut
-!write(90,*) 'alpha0==> ', alpha0
-!write(90,*) 'Final Move Cutoff ==> ', mv_cutoff
-!write(90,*) 'xmin ==>', xmin
-!write(90,*) 'xmax ==>', xmax
-!write(90,*) 'ymin ==>', ymin
-!write(90,*) 'ymax ==>', ymax
-!write(90,*) 'Total Time ==> ', time2-time1
-!close(90)
-!write(*,*) 'Hello Universe!'
+open(90,file='simulation.dat')
+write(90,*) 'particle dimensionality ==> ', d
+write(90,*) 'NG ==> ', NG
+write(90,*) 'Nsobol==>', Nsobol
+write(90,*) 'Total Time ==> ', time2-time1
+close(90)
+write(*,*) 'Hello Universe!'
 end program main

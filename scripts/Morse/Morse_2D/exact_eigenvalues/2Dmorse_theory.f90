@@ -4,6 +4,8 @@
 !Compute Eigenvalues for the 2D Morse Oscillator (Analytic Expression)
 !The eigenvalues will become negative due to the decreasing distance between 
 !energy states at higher excitations (After 24 excitations in 1D). 
+!This Website Explains the Constants for Morse Potential
+!https://ipfs.io/ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco/wiki/Morse_potential.html
 !==============================================================================!
 !The energies output (theory.dat) contain all the combinatorics 
 !These values are NOT sorted, see Python script "sort_2Dmorse.py" for sorting
