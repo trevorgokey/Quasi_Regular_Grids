@@ -5,9 +5,6 @@
 !Generate 2D Morse Grid and optimize with quasi-Lennard-Jones
 !this code minimizes in an analagous manner to mmc methods
 !see other versions for forced minimization
-!keep this version
-!rewrite poitential to use allocatabel vectors  
-!need to properly edit this code, but it will be kept
 !==============================================================================!
 !       Modified:
 !   30 April 2019
@@ -33,7 +30,6 @@ contains
 !==============================================================================!
 function random_integer(Nmin,Nmax) 
 !==============================================================================!
-!       Discussion:
 !Randomly generate an integer in the range 1-N_grid
 !       Variables:
 !Nmin           ==>minimum index value (1)
@@ -50,7 +46,6 @@ end function random_integer
 !==============================================================================!
 function V(x)
 !==============================================================================!
-!       Discussion:
 !Potential Energy (Hard-Coded 2D Morse)
 !==============================================================================!
 !V              ==>evaluate V(x,y)
@@ -67,7 +62,6 @@ end function V
 !==============================================================================!
 subroutine normalize_P(N_Eval)
 !==============================================================================!
-!       Discussion:
 !Normalize the target distribution function
 !integrating over the square [a,b],[a,b]: i.e. [-5,20], [-5,20]
 !int P(r)~Area_Square/N sum_n=1,N P(r_n)
@@ -97,7 +91,6 @@ end subroutine normalize_P
 !==============================================================================!
 function P(x)
 !==============================================================================!
-!       Discussion:
 !Target Distribution Function
 !==============================================================================!
 !P              ==> evaluate P(x)
@@ -117,7 +110,6 @@ end function P_x
 !==============================================================================!
 function Pair_LJ_NRG(x1,x2)
 !==============================================================================!
-!       Discussion:
 !computes quasi LJ energy between 2 particles
 !==============================================================================!
 !x1             ==>(d) ith atoms coordinates
@@ -142,7 +134,6 @@ end module qlj_mod
 program main
 use qlj_mod
 !==============================================================================!
-!       Discussion:
 !==============================================================================!
 !N_Px           ==> Number of mmc iterations to normalize P_x
 !NMC            ==> Number of MMC steps to execute
