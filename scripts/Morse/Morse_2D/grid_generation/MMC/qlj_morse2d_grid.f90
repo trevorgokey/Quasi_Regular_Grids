@@ -1,10 +1,9 @@
 !=============================================================================80
 !                      Grid Generation via MMC Methods
 !==============================================================================!
-!       Discussion:
-!Generate 2D Morse Grid and optimize with quasi-Lennard-Jones
-!this code minimizes in an analagous manner to mmc methods
-!see other versions for forced minimization
+!Generate gridpoints distributed via the 2D Morse Oscillator
+!This Quasi-Regular gird is optimized using a quasi-Lennard Jones Potential
+!Minimize Grid Points analagous to Metropolis Monte Carlo
 !==============================================================================!
 !       Modified:
 !   30 April 2019
@@ -31,11 +30,11 @@ contains
 function random_integer(Nmin,Nmax) 
 !==============================================================================!
 !Randomly generate an integer in the range 1-N_grid
-!       Variables:
+!==============================================================================!
 !Nmin           ==>minimum index value (1)
 !Nmax           ==>maximum index value (N_grid)
 !random_integer ==>integer returned
-!a              ==>Fortran intrinsic random number [0,1]
+!a              ==>random number (0,1)
 !==============================================================================!
 implicit none
 integer::Nmin,Nmax,random_integer
@@ -48,16 +47,17 @@ function V(x)
 !==============================================================================!
 !Potential Energy (Hard-Coded 2D Morse)
 !==============================================================================!
-!V              ==>evaluate V(x,y)
 !x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
-!D_morse        ==>morse constant
+!V              ==>evaluate V(x)
+!D_morse        ==>Parameter for Morse Potential
+!omega          ==>(d) Parameter for Morse Potential
 !==============================================================================!
 implicit none 
 double precision::x(d),V
 double precision,parameter::omega_x=0.2041241
 double precision,parameter::omega_y=0.18371169
 double precision,parameter::D_morse=12.
-V_x=D_morse*((exp(-omega_x*x_i(1))-1)**2+(exp(-omega_y*x_i(2))-1)**2)
+V=D_morse*((exp(-omega_x*x(1))-1)**2+(exp(-omega_y*x(2))-1)**2)
 end function V
 !==============================================================================!
 subroutine normalize_P(N_Eval)
@@ -66,22 +66,22 @@ subroutine normalize_P(N_Eval)
 !integrating over the square [a,b],[a,b]: i.e. [-5,20], [-5,20]
 !int P(r)~Area_Square/N sum_n=1,N P(r_n)
 !==============================================================================!
-!norm           ==> evaluate P(r)
+!norm           ==>evaluate P(r)
 !r              ==>(d) coordinates for evaluating P(r), sobol sequence
-!N_eval         ==> number of evaluations for integral approximation
-!a,b            ==> bounds for square to normalize over (b-a)^2 = area
+!N_eval         ==>number of evaluations for integral approximation
+!a,b            ==>bounds for square to normalize over (b-a)^2 = area
 !==============================================================================!
 integer::N_eval,counter
 double precision::r(2),norm
-integral_P=1d0              !set equal to 1 so you can initially call P_x
-norm=0d0                    !compute the normalization
+integral_P=1d0                     !set equal to 1 so you can initially call P_x
+norm=0d0                                              !compute the normalization
 counter=0
-do while(counter.lt.N_Eval)      !only want points inside E_cut
+do while(counter.lt.N_Eval)                       !only want points inside E_cut
     call random_number(r)
     r(1)=xmin+r(1)*(xmax-xmin)
     r(2)=xmin+r(2)*(ymax-ymin)
-    if(V_x(r)<E_cut)then
-        norm=norm+P_x(r)
+    if(V(r)<E_cut)then
+        norm=norm+P(r)
         counter=counter+1
     endif
 enddo
@@ -96,33 +96,32 @@ function P(x)
 !P              ==> evaluate P(x)
 !x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
 !Del_par        ==> Delta parameter for P(x) distribution, :=10% of Ecut
-!integral_P     ==> Normalization factor for P(x)
 !==============================================================================!
 implicit none 
-double precision::Del_par,x_i(d),P_x
+double precision::Del_par,x(d),P
 Del_par=0.01*E_cut
-if(V_x(x_i)<E_cut) then
-   P_x=(E_cut+Del_par-V_x(x_i))/integral_P
+if(V(x)<E_cut) then
+   P=(E_cut+Del_par-V(x))/integral_P
 else        !set equal to 0 if beyond Ecut
-   P_x=1d-8
+   P=1d-8
 end if
-end function P_x
+end function P
 !==============================================================================!
 function Pair_LJ_NRG(x1,x2)
 !==============================================================================!
-!computes quasi LJ energy between 2 particles
+!quasi-Lennard Jones pairwise energy between grid points
 !==============================================================================!
 !x1             ==>(d) ith atoms coordinates
 !x2             ==>(d) jth atoms coordinates
-!a              ==>evaluate LJ
-!sigma1/2       ==>c*sigma(P_x)
-!Pair_LJ_NRG    ==>Energy of the i-j LJ potential
+!a/b            ==>evaluate LJ
+!sigma1/2       ==>c*sigma(P)
+!Pair_LJ_NRG    ==>Energy of the i-j q-LJ potential
 !==============================================================================!
 implicit none 
 double precision::x1(d),x2(d),a,b,Pair_LJ_NRG,sigma1,sigma2
 a=sum((x1(:)-x2(:))**2)
-sigma1=c_LJ*(P_x(x1)*N_grid)**(-1./d)    
-sigma2=c_LJ*(P_x(x2)*N_grid)**(-1./d)    
+sigma1=c_LJ*(P(x1)*N_grid)**(-1./d)    
+sigma2=c_LJ*(P(x2)*N_grid)**(-1./d)    
 b=(sigma2**2/a)**3
 a=(sigma1**2/a)**3
 Pair_LJ_NRG=a**2-a+b**2-b
@@ -150,6 +149,8 @@ use qlj_mod
 !accept         ==> number of accepted trial moves, for acceptance~50%  
 !counter        ==> total number of moves, for acceptance~50%
 !t_i,t_f        ==> cpu time to ~ simulation time
+!alpha0         ==>Flat Scaling Parameter for Gaussian Widths
+!alpha          ==>(d) Gaussian Widths
 !==============================================================================!
 implicit none
 integer::NMC,NMC_freq,N_Px,accept,counter,i,j,k,n
@@ -191,7 +192,7 @@ do while(n.lt.N_grid)
     call random_number(s)
     s(1)=xmin+s(1)*(xmax-xmin)
     s(2)=xmin+s(2)*(ymax-ymin)
-    if(V_x(s)<E_cut)then
+    if(V(s)<E_cut)then
         n=n+1
         x(:,n)=s(:)
     endif
@@ -235,7 +236,7 @@ do i=1,NMC
 !==============================================================================!
     if(V(x0).lt.E_cut) then
         counter=counter+1
-        U_move(k)=P_x(x0)
+        U_move(k)=P(x0)
         Delta_E=0d0
         do j=1,N_grid
             if(j.ne.k) then
@@ -283,7 +284,7 @@ write(*,*) 'Test 2; Successfully Generated Quasi-Regular Gridpoints'
 !                          Generate Alpha Scaling 
 !==============================================================================!
 do i=1,N_grid
-    alpha(i)=alpha0/(c_LJ*(P_x(x(:,i))*N_grid)**(-1./d))**2
+    alpha(i)=alpha0/(c_LJ*(P(x(:,i))*N_grid)**(-1./d))**2
 enddo
 open(unit=18,file='alphas.dat')
 do i=1,N_grid

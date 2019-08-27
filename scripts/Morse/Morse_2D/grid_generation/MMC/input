@@ -1,5 +1,5 @@
 2           !d:         dimensionality of your gridpoints
-482          !NG:        number of gridpoints
+300          !NG:        number of gridpoints
 1000000        !N_Px:      number of iterations to normalize P_x
 1000000        !NMC:       number of MMC steps for generating grid
 10000         !NMC_freq:  frequency to evaluate MMC move criteria 
