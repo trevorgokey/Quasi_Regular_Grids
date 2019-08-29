@@ -79,11 +79,7 @@ read(*,*) d
 read(*,*) NG
 read(*,*) GH_order
 read(*,*) grid_in
-read(*,*) integral_P
 read(*,*) theory_in
-read(*,*) unif_grid
-read(*,*) E_cut
-read(*,*) c_LJ
 read(*,*) alpha0
 !==============================================================================!
 !                               Allocations
@@ -101,17 +97,13 @@ enddo
 close(17)
 !==============================================================================!
 !                       Generate Alphas alpha(NG)
-!Use nearest neighbor to define width alpha(NG)
+!           Use nearest neighbor to define width alpha(NG)
 !==============================================================================!
-if(unif_grid.EQV..TRUE.)then
-    alpha=alpha0
-    write(*,*) 'Test 1; Uniform Grid, Alpha:=Constant'
-else
-    do i=1,NG
-    alpha(i)=1d20                           !large distance away for placeholder
+do i=1,NG
+    alpha(i)=1d20                            !large distance for placeholder
     do j=1,NG
         if(j.ne.i) then
-            r2=sum((x(:,i)-x(:,j))**2)              !distance between gridpoints
+            r2=sum((x(:,i)-x(:,j))**2)          !distance between gridpoints
             if(r2<alpha(i)) alpha(i)=r2
         endif
     enddo
@@ -241,7 +233,7 @@ write(99,*) 'NG ==> ', NG
 write(99,*) 'alpha0==>', alpha0
 write(99,*) 'RCN Overlap Matrix==>', RCN
 write(99,*) 'GH Order==>', GH_order
-write(90,*) 'RCN==>', RCN
+write(99,*) 'RCN==>', RCN
 close(99)
 write(*,*) 'Hello Universe!'
 end program main
