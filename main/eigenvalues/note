@@ -1,2 +1,0 @@
-this code need the gen_hermite_rule.f90 source code to compute the potential matrix using
-gauss hermite quadriture. 

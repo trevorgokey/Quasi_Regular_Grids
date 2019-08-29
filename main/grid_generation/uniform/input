@@ -1,8 +1,0 @@
-3               !d:             dimensionality of your gridpoints
-939             !NG:            number of gridpoints
-10              !GH_order       quadrature order
-1               !alpha0:        scaling gaussian widths
-7.5            !Ecut:          Energy cutoff (same as grid generation)
-1               !c_LJ:          lennard jones (same as grid generation) 
-centers.dat        !coord_in:      input gridpoints (grid.dat)
-all_theory.dat  !theory_in:      input theory morse eigenvalues
