@@ -74,35 +74,31 @@ x_100=df_100[0]
 x_200=df_200[0]
 x_300=df_300[0]
 #==============================================================================#
-fig=plt.figure()
+fig,axs=plt.subplots(2,2)
 #==============================================================================#
-plt.subplot(2,2,1)
 for i in range(1,Ncols):
-    plt.scatter(x_50,df_50[i],c="black",s=10)
-plt.contour(X,Y,Z,colors='royalblue')
-plt.contour(X1,Y1,Z1,colors='royalblue',levels=level)
-plt.xticks(x,[])
+    axs[0,0].scatter(x_50,df_50[i],c="black",s=10)
+axs[0,0].contour(X,Y,Z,colors='royalblue')
+axs[0,0].contour(X1,Y1,Z1,colors='royalblue',levels=level)
+axs[0,0].set_xticks([])
 #==============================================================================#
-plt.subplot(2,2,2)
 for i in range(1,Ncols):
-    plt.scatter(x_100,df_100[i],c="black",s=10)
-plt.contour(X,Y,Z,colors='royalblue')
-plt.contour(X1,Y1,Z1,colors='royalblue',levels=level)
-plt.xticks(x,[])
-plt.yticks(y,[])
+    axs[0,1].scatter(x_100,df_100[i],c="black",s=10)
+axs[0,1].contour(X,Y,Z,colors='royalblue')
+axs[0,1].contour(X1,Y1,Z1,colors='royalblue',levels=level)
+axs[0,1].set_xticks([])
+axs[0,1].set_yticks([])
 #==============================================================================#
-plt.subplot(2,2,3)
 for i in range(1,Ncols):
-    plt.scatter(x_200,df_200[i],c="black",s=10)
-plt.contour(X,Y,Z,colors='royalblue')
-plt.contour(X1,Y1,Z1,colors='royalblue',levels=level)
+    axs[1,0].scatter(x_200,df_200[i],c="black",s=10)
+axs[1,0].contour(X,Y,Z,colors='royalblue')
+axs[1,0].contour(X1,Y1,Z1,colors='royalblue',levels=level)
 #==============================================================================#
-plt.subplot(2,2,4)
 for i in range(1,Ncols):
-    plt.scatter(x_300,df_300[i],c="black",s=10)
-plt.contour(X,Y,Z,colors='royalblue')
-plt.contour(X1,Y1,Z1,colors='royalblue',levels=level)
-plt.yticks(y,[])
+    axs[1,1].scatter(x_300,df_300[i],c="black",s=10)
+axs[1,1].contour(X,Y,Z,colors='royalblue')
+axs[1,1].contour(X1,Y1,Z1,colors='royalblue',levels=level)
+axs[1,1].set_yticks([])
 #==============================================================================#
 plt.show()
 plt.savefig('plot.png', bbox_inches='tight')
