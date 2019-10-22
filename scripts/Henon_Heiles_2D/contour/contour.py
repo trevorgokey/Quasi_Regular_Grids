@@ -67,6 +67,10 @@ X1,Y1=np.meshgrid(x1,y1)
 Z1=HH_pot(X1,Y1)
 level=[0.5,5,10,12.9]
 #==============================================================================#
+#                              Ecut(Hard-Coded)
+#==============================================================================#
+level2=[12.9]
+#==============================================================================#
 #                             Plot Grid + Contours
 #==============================================================================#
 x_50=df_50[0]
@@ -80,12 +84,14 @@ for i in range(1,Ncols):
     axs[0,0].scatter(x_50,df_50[i],c="black",s=10)
 axs[0,0].contour(X,Y,Z,colors='royalblue')
 axs[0,0].contour(X1,Y1,Z1,colors='royalblue',levels=level)
+axs[0,0].contour(X1,Y1,Z1,colors='red',levels=level2)
 axs[0,0].set_xticks([])
 #==============================================================================#
 for i in range(1,Ncols):
     axs[0,1].scatter(x_100,df_100[i],c="black",s=10)
 axs[0,1].contour(X,Y,Z,colors='royalblue')
 axs[0,1].contour(X1,Y1,Z1,colors='royalblue',levels=level)
+axs[0,1].contour(X1,Y1,Z1,colors='red',levels=level2)
 axs[0,1].set_xticks([])
 axs[0,1].set_yticks([])
 #==============================================================================#
@@ -93,12 +99,18 @@ for i in range(1,Ncols):
     axs[1,0].scatter(x_200,df_200[i],c="black",s=10)
 axs[1,0].contour(X,Y,Z,colors='royalblue')
 axs[1,0].contour(X1,Y1,Z1,colors='royalblue',levels=level)
+axs[1,0].contour(X1,Y1,Z1,colors='red',levels=level2)
 #==============================================================================#
 for i in range(1,Ncols):
     axs[1,1].scatter(x_300,df_300[i],c="black",s=10)
 axs[1,1].contour(X,Y,Z,colors='royalblue')
 axs[1,1].contour(X1,Y1,Z1,colors='royalblue',levels=level)
+axs[1,1].contour(X1,Y1,Z1,colors='red',levels=level2)
 axs[1,1].set_yticks([])
 #==============================================================================#
+xlim=(-7,8)
+ylim=(-7,8)
+plt.tick_params(axis='both', labelsize=20)
+plt.setp(axs,xlim=xlim,ylim=ylim)
 plt.show()
 plt.savefig('plot.png', bbox_inches='tight')
