@@ -80,12 +80,16 @@ x_300=df_300[0]
 #==============================================================================#
 fig,axs=plt.subplots(2,2)
 #==============================================================================#
+my_labels = np.arange(-8,10,2)
+my_dict = {'fontsize': 12}
 for i in range(1,Ncols):
     axs[0,0].scatter(x_50,df_50[i],c="black",s=10)
 axs[0,0].contour(X,Y,Z,colors='royalblue')
 axs[0,0].contour(X1,Y1,Z1,colors='royalblue',levels=level)
 axs[0,0].contour(X1,Y1,Z1,colors='red',levels=level2)
 axs[0,0].set_xticks([])
+axs[0,0].set_yticks(my_labels)
+axs[0,0].set_yticklabels(labels = my_labels, fontdict = my_dict)
 #==============================================================================#
 for i in range(1,Ncols):
     axs[0,1].scatter(x_100,df_100[i],c="black",s=10)
@@ -100,17 +104,19 @@ for i in range(1,Ncols):
 axs[1,0].contour(X,Y,Z,colors='royalblue')
 axs[1,0].contour(X1,Y1,Z1,colors='royalblue',levels=level)
 axs[1,0].contour(X1,Y1,Z1,colors='red',levels=level2)
+axs[1,0].set_xticklabels(labels = my_labels, fontdict = my_dict)
+axs[1,0].set_yticklabels(labels = my_labels, fontdict = my_dict)
+axs[1,0].set_xticks(my_labels)
+axs[1,0].set_yticks(my_labels)
 #==============================================================================#
 for i in range(1,Ncols):
     axs[1,1].scatter(x_300,df_300[i],c="black",s=10)
 axs[1,1].contour(X,Y,Z,colors='royalblue')
 axs[1,1].contour(X1,Y1,Z1,colors='royalblue',levels=level)
 axs[1,1].contour(X1,Y1,Z1,colors='red',levels=level2)
+axs[1,1].set_xticklabels(labels = my_labels, fontdict = my_dict)
+axs[1,1].set_xticks(my_labels)
 axs[1,1].set_yticks([])
 #==============================================================================#
-xlim=(-7,8)
-ylim=(-7,8)
-plt.tick_params(axis='both', labelsize=20)
-plt.setp(axs,xlim=xlim,ylim=ylim)
 plt.show()
-plt.savefig('plot.png', bbox_inches='tight')
+fig.savefig("plot.pdf", bbox_inches = 'tight')
