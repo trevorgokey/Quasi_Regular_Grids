@@ -80,39 +80,39 @@ x_4=df_4[0]
 #==============================================================================#
 fig,axs=plt.subplots(2,2)
 my_labels = np.arange(-5,23,10)
-my_dict = {'fontsize': 20}
+my_dict = {'fontsize': 25}
 #==============================================================================#
 for i in range(1,Ncols):
     axs[0,0].scatter(x_1,df_1[i],c="black",s=14)
 axs[0,0].contour(X1,Y1,Z1,colors='red',levels=level)
 axs[0,0].set_xticks([])
 axs[0,0].set_yticks(my_labels)
-axs[0,0].set_yticklabels(labels = my_labels, fontdict = my_dict)
-axs[0,0].text(15,20,'N=482',fontdict=my_dict)
+axs[0,0].set_yticklabels(labels=my_labels,fontdict=my_dict)
+axs[0,0].text(14,20,'N=482',fontdict=my_dict)
 #==============================================================================#
 for i in range(1,Ncols):
     axs[0,1].scatter(x_2,df_2[i],c="black",s=14)
 axs[0,1].contour(X1,Y1,Z1,colors='red',levels=level)
 axs[0,1].set_xticks([])
 axs[0,1].set_yticks([])
-axs[0,1].text(15,20,'N=482',fontdict=my_dict)
+axs[0,1].text(14,20,'N=482',fontdict=my_dict)
 #==============================================================================#
 for i in range(1,Ncols):
     axs[1,0].scatter(x_3,df_3[i],c="black",s=14)
 axs[1,0].contour(X1,Y1,Z1,colors='red',levels=level)
-axs[1,0].set_xticklabels(labels = my_labels, fontdict = my_dict)
-axs[1,0].set_yticklabels(labels = my_labels, fontdict = my_dict)
+axs[1,0].set_xticklabels(labels=my_labels,fontdict=my_dict)
+axs[1,0].set_yticklabels(labels=my_labels,fontdict=my_dict)
 axs[1,0].set_xticks(my_labels)
 axs[1,0].set_yticks(my_labels)
-axs[1,0].text(15,20,'N=400',fontdict=my_dict)
+axs[1,0].text(14,20,'N=400',fontdict=my_dict)
 #==============================================================================#
 for i in range(1,Ncols):
     axs[1,1].scatter(x_4,df_4[i],c="black",s=14)
 axs[1,1].contour(X1,Y1,Z1,colors='red',levels=level)
-axs[1,1].set_xticklabels(labels = my_labels, fontdict = my_dict)
+axs[1,1].set_xticklabels(labels=my_labels,fontdict=my_dict)
 axs[1,1].set_xticks(my_labels)
 axs[1,1].set_yticks([])
-axs[1,1].text(15,20,'N=300',fontdict=my_dict)
+axs[1,1].text(14,20,'N=300',fontdict=my_dict)
 #==============================================================================#
 plt.show()
 fig.savefig('plot.pdf', bbox_inches='tight')
