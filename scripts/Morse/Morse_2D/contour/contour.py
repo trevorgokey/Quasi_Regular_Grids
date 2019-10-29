@@ -64,24 +64,29 @@ my_level=[12]
 #==============================================================================#
 #                             Plot Grid + Contours
 title_dict={'fontsize': 32}
+label_dict={'fontsize': 30}
 my_labels=np.arange(-5,23,10)
 #==============================================================================#
 fig,axs=plt.subplots(2,2, sharex=True,sharey=True)
 axs[0,0].scatter(df_1[0],df_1[1],c='black',s=15)
 axs[0,0].contour(X,Y,Z,colors='red',levels=my_level)
 axs[0,0].set_title('Direct-product',fontdict=title_dict)
+axs[0,0].text(14,20,'N=482',fontdict=label_dict)
 #==============================================================================#
 axs[0,1].scatter(df_2[0],df_2[1],c='black',s=15)
 axs[0,1].contour(X,Y,Z,colors='red',levels=my_level)
 axs[0,1].set_title('Unif. quasi-random',fontdict=title_dict)
+axs[0,1].text(14,20,'N=482',fontdict=label_dict)
 #==============================================================================#
 axs[1,0].scatter(df_3[0],df_3[1],c='black',s=15)
 axs[1,0].contour(X,Y,Z,colors='red',levels=my_level)
 axs[1,0].set_title('Unif. quasi-random+rejection',fontdict=title_dict)
+axs[1,0].text(14,20,'N=400',fontdict=label_dict)
 #==============================================================================#
 axs[1,1].scatter(df_4[0],df_4[1],c='black',s=15)
 axs[1,1].contour(X,Y,Z,colors='red',levels=my_level)
 axs[1,1].set_title('Quasi-regular',fontdict=title_dict)
+axs[1,1].text(14,20,'N=300',fontdict=label_dict)
 #==============================================================================#
 for ax in axs.flat:
     ax.set(xlabel='', ylabel='')
