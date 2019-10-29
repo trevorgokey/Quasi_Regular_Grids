@@ -63,8 +63,6 @@ Z=morse_pot(X,Y)
 #==============================================================================#
 #                         Inner Contours (Hard-Coded)
 #==============================================================================#
-#x1=np.linspace(-7,8,Nint)
-#y1=np.linspace(-7,8,Nint)
 x1=np.linspace(xmin,xmax,Nint)
 y1=np.linspace(ymin,ymax,Nint)
 X1,Y1=np.meshgrid(x1,y1)
@@ -73,46 +71,42 @@ level=[12]
 #==============================================================================#
 #                             Plot Grid + Contours
 #==============================================================================#
-x_1=df_1[0]
-x_2=df_2[0]
-x_3=df_3[0]
-x_4=df_4[0]
-#==============================================================================#
 fig,axs=plt.subplots(2,2)
-my_labels = np.arange(-5,23,10)
-my_dict = {'fontsize': 25}
+my_labels=np.arange(-5,23,10)
+axis_dict={'fontsize': 25}
+title_dict={'fontsize': 30}
 #==============================================================================#
-for i in range(1,Ncols):
-    axs[0,0].scatter(x_1,df_1[i],c="black",s=14)
+axs[0,0].scatter(df_1[0],df_1[1],c="black",s=14)
+axs[0,0].set_title('Direct-product',fontdict=title_dict)
 axs[0,0].contour(X1,Y1,Z1,colors='red',levels=level)
 axs[0,0].set_xticks([])
 axs[0,0].set_yticks(my_labels)
-axs[0,0].set_yticklabels(labels=my_labels,fontdict=my_dict)
-axs[0,0].text(14,20,'N=482',fontdict=my_dict)
+axs[0,0].set_yticklabels(labels=my_labels,fontdict=axis_dict)
+axs[0,0].text(14,20,'N=482',fontdict=axis_dict)
 #==============================================================================#
-for i in range(1,Ncols):
-    axs[0,1].scatter(x_2,df_2[i],c="black",s=14)
+axs[0,1].scatter(df_2[0],df_2[1],c="black",s=14)
+axs[0,1].set_title('Unif. quasi-random',fontdict=title_dict)
 axs[0,1].contour(X1,Y1,Z1,colors='red',levels=level)
 axs[0,1].set_xticks([])
 axs[0,1].set_yticks([])
-axs[0,1].text(14,20,'N=482',fontdict=my_dict)
+axs[0,1].text(14,20,'N=482',fontdict=axis_dict)
 #==============================================================================#
-for i in range(1,Ncols):
-    axs[1,0].scatter(x_3,df_3[i],c="black",s=14)
+axs[1,0].scatter(df_3[0],df_3[1],c="black",s=14)
+axs[1,0].set_title('Unif. quasi-random+rejection',fontdict=axis_dict)
 axs[1,0].contour(X1,Y1,Z1,colors='red',levels=level)
-axs[1,0].set_xticklabels(labels=my_labels,fontdict=my_dict)
-axs[1,0].set_yticklabels(labels=my_labels,fontdict=my_dict)
+axs[1,0].set_xticklabels(labels=my_labels,fontdict=axis_dict)
+axs[1,0].set_yticklabels(labels=my_labels,fontdict=axis_dict)
 axs[1,0].set_xticks(my_labels)
 axs[1,0].set_yticks(my_labels)
-axs[1,0].text(14,20,'N=400',fontdict=my_dict)
+axs[1,0].text(14,20,'N=400',fontdict=axis_dict)
 #==============================================================================#
-for i in range(1,Ncols):
-    axs[1,1].scatter(x_4,df_4[i],c="black",s=14)
+axs[1,1].scatter(df_4[0],df_4[1],c="black",s=14)
+axs[1,1].set_title('Quasi-regular',fontdict=title_dict)
 axs[1,1].contour(X1,Y1,Z1,colors='red',levels=level)
-axs[1,1].set_xticklabels(labels=my_labels,fontdict=my_dict)
+axs[1,1].set_xticklabels(labels=my_labels,fontdict=axis_dict)
 axs[1,1].set_xticks(my_labels)
 axs[1,1].set_yticks([])
-axs[1,1].text(14,20,'N=300',fontdict=my_dict)
+axs[1,1].text(14,20,'N=300',fontdict=axs_dict)
 #==============================================================================#
 plt.show()
 fig.savefig('plot.pdf', bbox_inches='tight')
