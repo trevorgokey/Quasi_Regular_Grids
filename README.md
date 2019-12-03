@@ -18,13 +18,13 @@ The project was motivated in part by the work of [Garashchuk and Light](https://
 Special thanks to Garashcuk for discussing her previous results with us and
 helping compare our findings.
 
-The work by [Poirier and Light] (https://aip.scitation.org/doi/abs/10.1063/1.481787)
+The work by [Poirier and Light](https://aip.scitation.org/doi/abs/10.1063/1.481787)
 is a good reference for using Distributed Gaussian Basis sets in the context of
 RoVibrational spectroscopy.
 
 Interested readers should also consider modern work in the field, the work by
-[Bill Poirier] (https://aip.scitation.org/doi/full/10.1063/1.4769402) and
-[Tucker Carrington] (https://aip.scitation.org/doi/full/10.1063/1.3246593) is a
+[Bill Poirier](https://aip.scitation.org/doi/full/10.1063/1.4769402) and
+[Tucker Carrington](https://aip.scitation.org/doi/full/10.1063/1.3246593) is a
 good place to start.
 Special thanks to both authors for their insight and suggestions during the
 early phases of this project.
