@@ -35,6 +35,11 @@ The [Sobol Sequence Generator](https://people.sc.fsu.edu/~jburkardt/f_src/sobol/
 Thanks to John Burkardt for general advice on quasi-random numbers and their
 implementation.
 
+#### Potential Evaluation
+We have used Gauss-Hermite Quadrature to evaluate the Potential Energy Matrix
+Elements.
+Again we have used code made available by [John Burkardt](https://people.sc.fsu.edu/~jburkardt/f_src/gen_hermite_rule/gen_hermite_rule.html)
+(gen_hermite_rule.f90).
 
 ## Authors
 Shane W. Flynn, Vladimir A. Mandelshtam. 2019. UCI
