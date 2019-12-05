@@ -41,5 +41,15 @@ Elements.
 Again we have used code made available by [John Burkardt](https://people.sc.fsu.edu/~jburkardt/f_src/gen_hermite_rule/gen_hermite_rule.html)
 (gen_hermite_rule.f90).
 
+#### To Do List:
+Remove Grant codes
+Correlations
+Plot Basis
+morse
+gaus pairwise
+2D-std-nrm
+Merge all codes into one with different potential subroutines make this the code
+main.
+
 ## Authors
 Shane W. Flynn, Vladimir A. Mandelshtam. 2019. UCI

@@ -1,29 +1,32 @@
 !=============================================================================80
-!               2D Henon-Heiles Gaussian Basis, Gauss Hermite Quadrature
-!Code uses provided grid to construct a Gaussian Basis Set and solve the 
-!Generalized Eigenvalue Problem (integrals are computed using GHQ) 
-!This code defines alpha(i), the gaussian widths as a function of the original
-!distribution function P(x).
-!See GHQ_2D_HH.f90 for the nearest neighbor definition
-!See HH_2D_grid.f90 for the code that generates the initial grid.
+!               2D Henon-Heiles QRG-DGB Vibrational Eigen-Spectra
+!=============================================================================80
+!Constructs a Gaussian Basis Set (grid-points needed as input file) and solves
+!the Generalized Eigenvalue Problem to compute the Rovibrational Eigenspectra
+!For the 2-Dimensional Henon-Heiles Potential (Hard-Coded)
+!Gaussian widths are chosen based on the underlying distribution function, this
+!should be used for Pseudo-Random or Quasi-Random Grids
+!Use the Nearest Neighbor approach for Quasi-Random and Uniform grids.
+!Needs the gen_hermite_rule.f90 code for computing Potential matrix
+!Uses llapack dsygv to compute the eigenvalues
 !==============================================================================!
 !       Modified:
 !   19 May 2019
 !       Author:
-!   Shane Flynn 
+!   Shane Flynn
 !==============================================================================!
 module GHQ_mod
 implicit none
 !==============================================================================!
 !                            Global Variables
 !==============================================================================!
-!       Discussion:
-!d              ==>i-th gaussian dsionality (x^i=x^i_1,x^i_2,..,x^i_d)
+!d              ==>Particle Dimensionality (hard-coded Potential, 2D only)
 !integral_P     ==>Normalization of P(x), computed in HH_2D_grid.f90
-!E_cut          ==> Energy Cutoff Contour
-!c_LJ           ==> parameter for LJ
+!c_LJ           ==>parameter for qLJ (should be on the order of 1)
+!E_cut          ==>Energy Cutoff Contour
+!integral_P     ==>Normalization for P(x) (computed with the moments)
 !==============================================================================!
-integer::d
+integer,parameter::d=2
 double precision::integral_P,E_cut,c_LJ
 !==============================================================================!
 contains
@@ -31,7 +34,11 @@ contains
 function V(x)
 !==============================================================================!
 !       Discussion:
-!Potential Energy (Hard-Coded Henon-Heiles 2D)
+!Potential Energy (Hard-Coded 2-Dimensional Henon-Heiles)
+!==============================================================================!
+!V              ==>evaluate V(x,y)
+!x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
+!lambda         ==>HH Potential Parameter: Hamilton,Light 1986 paper for values
 !==============================================================================!
 implicit none
 double precision::x(d),V
@@ -42,11 +49,13 @@ end function V
 function P(x)
 !==============================================================================!
 !       Discussion:
-!Target Distribution Function
+!Target Distribution Function. The form comes from a simple semi-classical
+!argument proposed by Bill Poirier
+!Found. Phys. 30, 1191 (2000) [specifically Eq.(12)]
 !==============================================================================!
-!P              ==>evaluate P(x)
+!P              ==>evaluate P(x), the target distribution function
 !x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
-!integral_P     ==>Normalization factor for distribution P(x)
+!integral_P     ==>Normalization constant for P(x),(see moments subroutines)
 !==============================================================================!
 implicit none
 double precision::x(d),P
@@ -59,10 +68,12 @@ end function P
 !==============================================================================!
 end module GHQ_mod
 !==============================================================================!
+!==============================================================================!
+!==============================================================================!
 program main
 use GHQ_mod
 !==============================================================================!
-!       Discussion:
+!==============================================================================!
 !==============================================================================!
 !NG             ==>Number of basis functions
 !x              ==>(d) all atom coordinates
@@ -84,9 +95,8 @@ double precision,allocatable,dimension(:)::work
 !==============================================================================!
 !                           Read Input Data File                               !
 !==============================================================================!
-read(*,*) d
 read(*,*) NG
-read(*,*) GH_order   
+read(*,*) GH_order
 read(*,*) grid_in
 read(*,*) integral_P
 read(*,*) E_cut
@@ -104,10 +114,10 @@ write(*,*) 'Test 0; Successfully Read Input File'
 open(17,File=grid_in)
 do i=1,NG
     read(17,*) x(:,i)
-enddo 
+enddo
 close(17)
 !==============================================================================!
-!                           Generate Alphas 
+!                           Generate Alphas
 !generate Alpha(i) as a function of P(x_i)
 !==============================================================================!
 do i=1,NG
@@ -115,7 +125,7 @@ do i=1,NG
 enddo
 write(*,*) 'Test 1; Successfully Generated Alphas for QLJ Grid'
 !==============================================================================!
-!                          Write Alphas to File 
+!                          Write Alphas to File
 !==============================================================================!
 open(unit=18,file='alphas.dat')
 do i=1,NG
@@ -130,7 +140,7 @@ do i=1,NG
          aij=alpha(i)*alpha(j)/(alpha(i)+alpha(j))
          r2=sum((x(:,i)-x(:,j))**2)
          Smat(i,j)=(sqrt(alpha(i)*alpha(j))/(alpha(i)+alpha(j)))**(0.5*d)&
-             *exp(-0.5*aij*r2)   
+             *exp(-0.5*aij*r2)
        Smat(j,i)=Smat(i,j)
     enddo
 enddo
@@ -167,7 +177,7 @@ do i=1,NG
 !                                 Overlap
 !==============================================================================!
      Smat(i,j)=(sqrt(alpha(i)*alpha(j))/(alpha(i)+alpha(j)))**(0.5*d)&
-         *exp(-0.5*aij*r2)   
+         *exp(-0.5*aij*r2)
      Smat(j,i)=Smat(i,j)
 !==============================================================================!
 !                                 Kinetic
@@ -183,7 +193,7 @@ do i=1,NG
            rr(1)=z(l1)
            rr(2)=z(l2)
            rr=x_ij+rr/sqrt(alpha(i)+alpha(j))
-           Vij=Vij+w(l1)*w(l2)*V(rr) 
+           Vij=Vij+w(l1)*w(l2)*V(rr)
         enddo
      enddo
 !==============================================================================!

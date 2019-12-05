@@ -1,1 +1,0 @@
-requires gen_hermite_rule.f90 for computing GHQ
