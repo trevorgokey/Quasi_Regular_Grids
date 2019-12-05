@@ -3,8 +3,8 @@
 #-O0=no optimization,-O3=full optimization
 #==============================================================================#
 FC=gfortran 
-FFLAGS=-O2
-#FFLAGS= -g -O0 -Wall -Wextra -pedantic -fcheck=all -fbacktrace 
+#FFLAGS=-O2
+FFLAGS= -g -O0 -Wall -Wextra -pedantic -fcheck=all -fbacktrace 
 #==============================================================================#
 #			   	Targets 
 #==============================================================================#
