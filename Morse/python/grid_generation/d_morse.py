@@ -27,26 +27,18 @@
 #E_cut          ==>Energy Cutoff Contour
 #integral_P     ==>P(x) Normalization
 #==============================================================================!
-integer::d,Npoints
-double precision,allocatable,dimension(:)::omega
-double precision::c_LJ,E_cut,integral_P
+#Import Statements
 #==============================================================================!
-contains
+import random
 #==============================================================================!
-def random_integer(Nmin,Nmax):
-    """Returns a pseudo-random integer in the range Nmin:Nmax"""
-#Nmin           ==>minimum index value (1)
-#Nmax           ==>maximum index value (Nparticles)
-#random_integer ==>integer returned
-#a              ==>random number (0,1)
+
+
+
+
+#integer::d,Npoints
+#double precision,allocatable,dimension(:)::omega
+#double precision::c_LJ,E_cut,integral_P
 #==============================================================================!
-#implicit none
-#integer::Nmin,Nmax,random_integer
-#double precision::a
-#call random_number(a)
-#random_integer=floor(a*(Nmax-Nmin+1))+Nmin
-#end function random_integer
-#==============================================================================
 #function V(x)
 #==============================================================================
 #Potential Energy
@@ -363,7 +355,8 @@ def random_integer(Nmin,Nmax):
 #==============================================================================
 #                       Randomly Select Atom to Move
 #==============================================================================
-#  k=random_integer(1,Npoints)
+Npoints=10
+k=random.randint(1,Npoints)
 #==============================================================================
 #                           Generate trial move
 #        random numbers generated (0,1), make it (-1,1) ==> s=2*s-1
