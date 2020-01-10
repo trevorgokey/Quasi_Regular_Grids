@@ -27,33 +27,27 @@
 #E_cut          ==>Energy Cutoff Contour
 #integral_P     ==>P(x) Normalization
 #==============================================================================!
-#Import Statements
-#==============================================================================!
-import random
-#==============================================================================!
-
-
-
-
 #integer::d,Npoints
 #double precision,allocatable,dimension(:)::omega
 #double precision::c_LJ,E_cut,integral_P
 #==============================================================================!
-#function V(x)
-#==============================================================================
-#Potential Energy
-#Sum of 1D Morse Potentials
-#==============================================================================
-#x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
-#V              ==>evaluate V(x)
-#D_morse        ==>Parameter for Morse Potential
-#omega          ==>(d) Parameter for Morse Potential
-#==============================================================================
-#implicit none
-#double precision::x(d),V
-#double precision,parameter::D_morse=12.
-#V=D_morse*sum((exp(-omega(:)*x(:))-1.)**2)
-#end function V
+#==============================================================================!
+#Import Statements
+#==============================================================================!
+import random
+#==============================================================================!
+def potential(x):
+    """
+    Potential Energy, summation of 1-D morse potentials
+    Paramaters:
+    x[d]     ==>(float) coordinates x^i_1,..,x^i_d of the i-th gridpoint
+    V        ==>(float) evaluate V(x)
+    D_morse  ==>(float) Parameter for Morse Potential
+    omega          ==> (d) Parameter for Morse Potential
+    """
+    D_morse=12.
+    V=D_morse*sum((exp(-omega(:)*x(:))-1.)**2)
+    return V
 #==============================================================================
 #function P(x)
 #==============================================================================
