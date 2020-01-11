@@ -69,7 +69,7 @@ function P(x)
 implicit none 
 double precision::x(d),P
 if(V(x)<E_cut) then
-   P=(E_cut-V(x))/integral_P          
+   P=(E_cut-V(x))**(d/2.)/integral_P          
 else                                             !set equal to 0 if beyond Ecut
    P=1d-20
 end if
