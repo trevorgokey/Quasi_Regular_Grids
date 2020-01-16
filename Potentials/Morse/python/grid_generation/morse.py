@@ -31,9 +31,6 @@
 #double precision,allocatable,dimension(:)::omega
 #double precision::c_LJ,E_cut,integral_P
 #==============================================================================!
-#==============================================================================!
-#Import Statements
-#==============================================================================!
 import random
 #==============================================================================!
 def potential(x):
@@ -51,8 +48,8 @@ def potential(x):
 #==============================================================================
 #function P(x)
 #==============================================================================
-#Target Distribution Function see Poirier 200 for the theory
-#(Found. Phys. 30, 1191–1226 2000 )
+#Target Distribution Function
+#See Poirier's work for the derivation: (Found. Phys. 30, 1191–1226 2000 )
 #==============================================================================
 #P              ==>evaluate P(x)
 #x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
