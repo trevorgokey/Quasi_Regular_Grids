@@ -40,7 +40,7 @@ max=100;
 start=0.0;
 inc=0.1;
 #==============================================================================#
-#                       New directory n for each calculation 
+#                       New directory n for each calculation
 #==============================================================================#
 while [ "$n" -le "$max" ]; do
   mkdir "$n"
@@ -48,7 +48,7 @@ while [ "$n" -le "$max" ]; do
   cp ../grid.dat "$n"
   cp ../all_theory.dat "$n"
   cd "$n"
-#      single arrow makes a file, double arrow appends to an existing file
+#single arrow makes a file, double arrow appends to an existing file
   echo "$d" > input
   echo "$NG" >> input
   echo "$GH_order" >> input
