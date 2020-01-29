@@ -8,12 +8,12 @@
 !       Modified:
 !   15 May 2019
 !       Author:
-!   Shane Flynn 
+!   Shane Flynn
 !==============================================================================!
 module QRGB_mod
 implicit none
 !==============================================================================!
-!                            Global Variables 
+!                            Global Variables
 !==============================================================================!
 !d              ==>i-th gaussian dsionality (x^i=x^i_1,x^i_2,..,x^i_d)
 !==============================================================================!
@@ -23,7 +23,7 @@ contains
 !==============================================================================!
 function V(x)
 !==============================================================================!
-!Hard-coded Morse Potential Energy 
+!Hard-coded Morse Potential Energy
 !==============================================================================!
 !x              ==>(d) ith atoms coordinates
 !V              ==>evaluate V(x_i)
@@ -92,7 +92,7 @@ write(*,*) 'Test 0; Successfully Read Input File'
 open(17,File=grid_in)
 do i=1,NG
     read(17,*) x(:,i)
-enddo 
+enddo
 close(17)
 !==============================================================================!
 !                           Generate Gaussian Widths
@@ -115,7 +115,7 @@ else
     write(*,*) 'Test 1; Successfully Generated Alphas from Nearest Neighbor'
 endif
 !==============================================================================!
-!                          Write Alphas to File 
+!                          Write Alphas to File
 !==============================================================================!
 open(unit=18,file='alphas.dat')
 do i=1,NG
@@ -137,7 +137,7 @@ do i=1,NG
 enddo
 !==============================================================================!
 !                   Check to see if S is positive definite
-!If this is removed, you need to allocate llapack arrays before Hamiltonian 
+!If this is removed, you need to allocate llapack arrays before Hamiltonian
 !==============================================================================!
 lwork=max(1,3*NG-1)
 allocate(work(max(1,lwork)))
@@ -157,7 +157,7 @@ write(*,*) 'Test 2; Overlap Matrix is Positive Definite'
 !==============================================================================!
 call cgqf(GH_order,6,0d0,0d0,0d0,1d0,z,w)
 !note this is different than 2D case
-w=w/sqrt(pi)  
+w=w/sqrt(pi)
 !==============================================================================!
 !                   Solve Generalized Eigenvalue Problem
 !==============================================================================!
@@ -166,7 +166,7 @@ do i=1,NG
      aij=alpha(i)*alpha(j)/(alpha(i)+alpha(j))
      r2=sum((x(:,i)-x(:,j))**2)
      Smat(i,j)=(2*sqrt(alpha(i)*alpha(j))/(alpha(i)+alpha(j)))**(0.5*d)&
-         *exp(-aij*r2)   
+         *exp(-aij*r2)
      Smat(j,i)=Smat(i,j)
      ! kinetic energy:
 !different than 2D case, look into this
