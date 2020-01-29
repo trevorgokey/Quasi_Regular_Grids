@@ -59,7 +59,7 @@ function P(x)
 implicit none
 double precision::x(d),P
 if(V(x)<E_cut) then
-  P=(E_cut-V(x))/integral_P
+  P=(E_cut-V(x))**(d/2.)/integral_P
 else        !set equal to 0 if beyond Ecut
   P=1d-20
 end if
@@ -224,9 +224,9 @@ close(20)
 !                               output file                                    !
 !==============================================================================!
 open(99,file='simulation.dat')
-write(99,*) 'particle dsionality ==> ', d
+write(99,*) 'particle dimensionality ==> ', d
 write(99,*) 'NG ==> ', NG
-write(99,*) 'GH_order==>', GH_order
+write(99,*) 'GH_order ==>', GH_order
 write(99,*) 'Integral_P ==>', Integral_P
 write(99,*) 'Ecut ==>', E_cut
 write(99,*) 'C_LJ ==>', c_LJ
