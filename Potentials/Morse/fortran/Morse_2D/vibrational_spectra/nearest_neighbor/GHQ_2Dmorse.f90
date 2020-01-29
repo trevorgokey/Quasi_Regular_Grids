@@ -1,5 +1,5 @@
 !=============================================================================80
-!                    2D Morse with Gauss Hermite Quadrature 
+!                    2D Morse with Gauss Hermite Quadrature
 !=============================================================================80
 !Quasi-Regular Grid for computing vibrational spectra
 !generate alpha based on nearest neghbor
@@ -9,7 +9,7 @@
 !       Modified:
 !   19 May 2019
 !       Author:
-!   Shane Flynn 
+!   Shane Flynn
 !==============================================================================!
 module GHQ_mod
 implicit none
@@ -24,7 +24,7 @@ contains
 !==============================================================================!
 function V(x)
 !==============================================================================!
-!Hard-coded Morse Potential Energy 
+!Hard-coded Morse Potential Energy
 !==============================================================================!
 !x              ==>(d) ith atoms coordinates
 !V              ==>evaluate V(x_i)
@@ -46,7 +46,7 @@ use GHQ_mod
 !grid_in        ==>Filename Containing Gridpoints, see qlj_morse2d_grid.f90
 !theory_in      ==>Filename Containing Analytic Eigenvalues, see theory.f90
 !theory         ==>(NG) Analytic Eigenvalues
-!NG             ==>Number of Gaussian Basis Functions (gridpoints) 
+!NG             ==>Number of Gaussian Basis Functions (gridpoints)
 !GH_order       ==>Number of Points for evaluating the potential (Gauss-Hermite)
 !alpha0         ==>Flat Scaling Parameter for Gaussian Widths
 !alpha          ==>(d) Gaussian Widths
@@ -64,16 +64,16 @@ double precision,parameter::pi=4.*atan(1d0)
 double precision,allocatable,dimension(:)::alpha,eigenvalues,x_ij,theory,z,w,rr
 double precision,allocatable,dimension(:,:)::x,Smat,Hmat
 !==============================================================================!
-!                           LLAPACK dsygv variables                                
+!                           LLAPACK dsygv variables
 !==============================================================================!
 integer::itype,info,lwork
 double precision,allocatable,dimension(:)::work
 !==============================================================================!
-!                           Read Input Data File                               
+!                           Read Input Data File
 !==============================================================================!
 read(*,*) d
 read(*,*) NG
-read(*,*) GH_order   
+read(*,*) GH_order
 read(*,*) grid_in
 read(*,*) theory_in
 read(*,*) alpha0
@@ -89,7 +89,7 @@ write(*,*) 'Test 0; Successfully Read Input File'
 open(17,File=grid_in)
 do i=1,NG
     read(17,*) x(:,i)
-enddo 
+enddo
 close(17)
 !==============================================================================!
 !                           Generate Gaussian Widths
@@ -107,7 +107,7 @@ do i=1,NG
 enddo
 write(*,*) 'Test 1; Successfully Generated Alphas from nearest neighbor'
 !==============================================================================!
-!                           Write Alphas to File 
+!                           Write Alphas to File
 !==============================================================================!
 open(unit=18,file='alphas.dat')
 do i=1,NG
@@ -122,13 +122,13 @@ do i=1,NG
          aij=alpha(i)*alpha(j)/(alpha(i)+alpha(j))
          r2=sum((x(:,i)-x(:,j))**2)
          Smat(i,j)=(sqrt(alpha(i)*alpha(j))/(alpha(i)+alpha(j)))**(0.5*d)&
-             *exp(-0.5*aij*r2)   
+             *exp(-0.5*aij*r2)
        Smat(j,i)=Smat(i,j)
     enddo
 enddo
 !==============================================================================!
 !                   Check to see if S is positive definite
-!If this is removed, you need to allocate llapack arrays before Hamiltonian 
+!If this is removed, you need to allocate llapack arrays before Hamiltonian
 !==============================================================================!
 lwork=max(1,3*NG-1)
 allocate(work(max(1,lwork)))
@@ -156,7 +156,7 @@ do i=1,NG
      aij=alpha(i)*alpha(j)/(alpha(i)+alpha(j))
      r2=sum((x(:,i)-x(:,j))**2)
      Smat(i,j)=(sqrt(alpha(i)*alpha(j))/(alpha(i)+alpha(j)))**(0.5*d)&
-         *exp(-0.5*aij*r2)   
+         *exp(-0.5*aij*r2)
      Smat(j,i)=Smat(i,j)
 !==============================================================================!
 !                          Kinetic Energy Matrix
@@ -172,11 +172,11 @@ do i=1,NG
            rr(1)=z(l1)
            rr(2)=z(l2)
            rr=x_ij+rr/sqrt(alpha(i)+alpha(j))
-           Vij=Vij+w(l1)*w(l2)*V(rr) 
+           Vij=Vij+w(l1)*w(l2)*V(rr)
         enddo
      enddo
 !==============================================================================!
-!                      Hamiltonian = Kinetic + Potential 
+!                      Hamiltonian = Kinetic + Potential
 !==============================================================================!
      Hmat(i,j)=(Hmat(i,j)+Vij)*Smat(i,j)
      Hmat(j,i)=Hmat(i,j)
@@ -195,7 +195,7 @@ close(20)
 open(21,File=theory_in)
 do i=1,NG
     read(21,*) theory(i)
-enddo 
+enddo
 close(21)
 open(unit=22,file='abs_err.dat')
 open(unit=23,file='rel_error.dat')

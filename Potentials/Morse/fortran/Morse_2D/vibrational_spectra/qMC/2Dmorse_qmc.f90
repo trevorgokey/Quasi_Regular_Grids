@@ -10,7 +10,7 @@
 !       Modified:
 !   1 May 2019
 !       Author:
-!   Shane Flynn 
+!   Shane Flynn
 !==============================================================================!
 module QRGB_mod
 implicit none
@@ -35,11 +35,11 @@ function P(x)
 !x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
 !Delta          ==>Delta parameter for P(x) distribution, :=10% of Ecut
 !==============================================================================!
-implicit none 
+implicit none
 double precision::Delta,x(d),P
 Delta=0.01*E_cut
 if(Potential(x)<E_cut) then
-   P=(E_cut+Delta-Potential(x))/integral_P
+   P=(E_cut+Delta-Potential(x))**(d/2.)/integral_P
 else                                              !set equal to 0 if beyond Ecut
    P=1d-20
 end if
@@ -47,7 +47,7 @@ end function P
 !==============================================================================!
 function Potential(x)
 !==============================================================================!
-!Hard-coded Morse Potential Energy 
+!Hard-coded Morse Potential Energy
 !==============================================================================!
 !x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
 !Potential      ==>evaluate Potential(x)
@@ -127,10 +127,10 @@ write(*,*) 'Test 0; Successfully Read Input File'
 open(17,File=grid_in)
 do n=1,NG
     read(17,*) x(:,n)
-enddo 
+enddo
 close(17)
 !==============================================================================!
-!                          Generate Alpha Scaling 
+!                          Generate Alpha Scaling
 !==============================================================================!
 open(unit=18,file='alphas.dat')
 do i=1,NG
@@ -153,7 +153,7 @@ do i=1,NG
 enddo
 !==============================================================================!
 !                   Check to see if S is positive definite
-!If this is removed, you need to allocate llapack arrays before Hamiltonian 
+!If this is removed, you need to allocate llapack arrays before Hamiltonian
 !==============================================================================!
 lwork=max(1,3*NG-1)
 allocate(work(max(1,lwork)))
@@ -174,14 +174,14 @@ do l=1,Nsobol
 enddo
 write(*,*) 'Test 5; Successfully Generated Integration Sequence'
 !==============================================================================!
-!                              Theory Eigenvalues Value 
+!                              Theory Eigenvalues Value
 !==============================================================================!
 open(21,File=theory_in)
 do i=1,NG
     read(21,*) theory(i)
-enddo 
+enddo
 close(21)
-!==============================================================================! 
+!==============================================================================!
 !                             Evaluate Potential
 !==============================================================================!
 Vmat=0d0
@@ -192,7 +192,7 @@ do counter=1,Nsobol/data_freq
       do j=i,NG
          x_ij(:)=(alpha(i)*x(:,i)+alpha(j)*x(:,j))/(alpha(i)+alpha(j))
          do l=(counter-1)*data_freq+1,counter*data_freq
-            Vmat(i,j)=Vmat(i,j)+Potential(x_ij(:)+z(:,l)/sqrt(alpha(i)+alpha(j))) 
+            Vmat(i,j)=Vmat(i,j)+Potential(x_ij(:)+z(:,l)/sqrt(alpha(i)+alpha(j)))
          enddo
       enddo
    enddo
@@ -244,7 +244,7 @@ write(90,*) 'NG ==> ', NG
 write(90,*) 'Nsobol==>', Nsobol
 write(90,*) 'Data Frequency==>', Data_Freq
 write(90,*) 'alpha 0==>', alpha0
-write(90,*) 'integral_P==>', integral_P 
+write(90,*) 'integral_P==>', integral_P
 write(90,*) 'Ecut==>', E_cut
 write(90,*) 'c_LJ ==>', c_LJ
 close(90)

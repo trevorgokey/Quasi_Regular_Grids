@@ -8,12 +8,12 @@
 !       Modified:
 !   30 April 2019
 !       Author:
-!   Shane Flynn 
+!   Shane Flynn
 !==============================================================================!
 module qlj_mod
 implicit none
 !==============================================================================!
-!                            Global Variables 
+!                            Global Variables
 !==============================================================================!
 !d              ==>Particle Dimensionality
 !N_grid         ==>Number of gridpoints
@@ -27,7 +27,7 @@ double precision::c_LJ,E_cut,integral_P,xmin,xmax,ymin,ymax
 !==============================================================================!
 contains
 !==============================================================================!
-function random_integer(Nmin,Nmax) 
+function random_integer(Nmin,Nmax)
 !==============================================================================!
 !Randomly generate an integer in the range 1-N_grid
 !==============================================================================!
@@ -52,7 +52,7 @@ function V(x)
 !D_morse        ==>Parameter for Morse Potential
 !omega          ==>(d) Parameter for Morse Potential
 !==============================================================================!
-implicit none 
+implicit none
 double precision::x(d),V
 double precision,parameter::omega_x=0.2041241
 double precision,parameter::omega_y=0.18371169
@@ -87,7 +87,7 @@ do while(counter.lt.N_Eval)                       !only want points inside E_cut
 enddo
 norm=norm*(xmax-xmin)*(ymax-ymin)/N_eval
 integral_P=norm
-end subroutine normalize_P 
+end subroutine normalize_P
 !==============================================================================!
 function P(x)
 !==============================================================================!
@@ -97,11 +97,11 @@ function P(x)
 !x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
 !Del_par        ==> Delta parameter for P(x) distribution, :=10% of Ecut
 !==============================================================================!
-implicit none 
+implicit none
 double precision::Del_par,x(d),P
 Del_par=0.01*E_cut
 if(V(x)<E_cut) then
-   P=(E_cut+Del_par-V(x))/integral_P
+   P=(E_cut+Del_par-V(x))**(d/2.)/integral_P
 else        !set equal to 0 if beyond Ecut
    P=1d-8
 end if
@@ -117,11 +117,11 @@ function Pair_LJ_NRG(x1,x2)
 !sigma1/2       ==>c*sigma(P)
 !Pair_LJ_NRG    ==>Energy of the i-j q-LJ potential
 !==============================================================================!
-implicit none 
+implicit none
 double precision::x1(d),x2(d),a,b,Pair_LJ_NRG,sigma1,sigma2
 a=sum((x1(:)-x2(:))**2)
-sigma1=c_LJ*(P(x1)*N_grid)**(-1./d)    
-sigma2=c_LJ*(P(x2)*N_grid)**(-1./d)    
+sigma1=c_LJ*(P(x1)*N_grid)**(-1./d)
+sigma2=c_LJ*(P(x2)*N_grid)**(-1./d)
 b=(sigma2**2/a)**3
 a=(sigma1**2/a)**3
 Pair_LJ_NRG=a**2-a+b**2-b
@@ -146,7 +146,7 @@ use qlj_mod
 !t1             ==> random number for accepting higher energy movement
 !s              ==>(d) random number to move coordinate by
 !NMC_freq       ==> Interval to update mv_cutoff size
-!accept         ==> number of accepted trial moves, for acceptance~50%  
+!accept         ==> number of accepted trial moves, for acceptance~50%
 !counter        ==> total number of moves, for acceptance~50%
 !t_i,t_f        ==> cpu time to ~ simulation time
 !alpha0         ==>Flat Scaling Parameter for Gaussian Widths
@@ -204,7 +204,7 @@ enddo
 close(16)
 write(*,*) 'Test 1; Successfully Generated Initial GridPoints'
 !==============================================================================!
-!                           Compute U[x_ij] 
+!                           Compute U[x_ij]
 !compute pairwise energies for all the initial GridPoints
 !==============================================================================!
 do i=2,N_grid
@@ -228,10 +228,10 @@ do i=1,NMC
 !                   Generate coordinates for Random move trial
 !random numbers generated (0,1), make it (-1,1) ==> s=2*s-1
 !==============================================================================!
-    call random_number(s) 
+    call random_number(s)
     x0=x(:,k)+mv_cutoff*(2*s-1)
 !==============================================================================!
-!                   Only consider point if V(trial) < Ecut 
+!                   Only consider point if V(trial) < Ecut
 !               Compute LJ Energy Change due to Trial Move
 !==============================================================================!
     if(V(x0).lt.E_cut) then
@@ -248,7 +248,7 @@ do i=1,NMC
 !               Test to see if you should accept higher energy move
 !if delta e > 0 than always larger than 1, always accept
 !==============================================================================!
-        call random_number(t1) 
+        call random_number(t1)
         if(exp(Delta_E).ge.t1)then
            U(:,k)=U_move(:)
            U(k,:)=U_move(:)
@@ -262,7 +262,7 @@ do i=1,NMC
 !==============================================================================!
     if(mod(i,NMC_freq)==0)then
         write(*,*) 'MMC Iteration', n
-        if(dble(accept)/counter<0.5)then 
+        if(dble(accept)/counter<0.5)then
             mv_cutoff=mv_cutoff*0.9
         else
             mv_cutoff=mv_cutoff*1.1
@@ -272,7 +272,7 @@ do i=1,NMC
     endif
 enddo
 !==============================================================================!
-!                   Write Gridpoints Configuration to file 
+!                   Write Gridpoints Configuration to file
 !==============================================================================!
 open(unit=17,file='grid.dat')
 do i=1,N_grid
@@ -281,7 +281,7 @@ enddo
 close(17)
 write(*,*) 'Test 2; Successfully Generated Quasi-Regular Gridpoints'
 !==============================================================================!
-!                          Generate Alpha Scaling 
+!                          Generate Alpha Scaling
 !==============================================================================!
 do i=1,N_grid
     alpha(i)=alpha0/(c_LJ*(P(x(:,i))*N_grid)**(-1./d))**2

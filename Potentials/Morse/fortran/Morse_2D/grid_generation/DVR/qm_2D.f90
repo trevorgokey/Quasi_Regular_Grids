@@ -2,16 +2,14 @@
 !                       2D Morse DVR and Truncation
 !=============================================================================80
 !Uniform DVR Grid (with Truncation) for 2D Morse Potential
-!This code generates a grid analagous to Garaschuk, Light (2001)
 !Requires the cg.f code (RS subroutine, solves the eigenvalue problem)
+!I should go back and replace this with llapack
+!I should go back and re-write this code to be in my style
 !=============================================================================80
-!We are unable to reproduce the reported accuracy from the manuscript with this
-!We spoke to Garaschuk who gave all parameters used in this code
-!==============================================================================!
 !       Modified:
 !   5 May 2019
 !       Author:
-!   Shane Flynn 
+!   Shane Flynn
 !==============================================================================!
 PROGRAM QM_2d
 !==============================================================================!
@@ -62,7 +60,7 @@ enddo
 !                 Total Number of Grid Points within cutoff contour
 !==============================================================================!
 Ndvr=0
-do i=1,Nx        
+do i=1,Nx
     q(1)=x(i)
     do j=1,Ny
         q(2)=y(j)
@@ -79,7 +77,7 @@ allocate(H(Ndvr,Ndvr),z(Ndvr,Ndvr),E(Ndvr),Fv1(Ndvr),Fv2(Ndvr))
 !==============================================================================!
 i=0
 H=0d0
-do i1=1,Nx        
+do i1=1,Nx
     q(1)=x(i1)
     do i2=1,Ny
         q(2)=y(i2)
@@ -115,7 +113,7 @@ do i1=1,Nx
     enddo
 enddo
 !==============================================================================!
-!                         Compute Vibrational Spectra 
+!                         Compute Vibrational Spectra
 !==============================================================================!
 call RS(Ndvr,Ndvr,H,E,1,z,FV1,FV2,IERR)
 write(1,*) '#   Nx=',Nx,' Ny=',Ny,' Ecut=', Ecut,'  Ndvr=', Ndvr
@@ -127,7 +125,7 @@ end program QM_2d
 !==============================================================================!
 function Potential(x)
 !==============================================================================!
-!Hard-coded Morse Potential Energy 
+!Hard-coded Morse Potential Energy
 !==============================================================================!
 !x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
 !Potential      ==>evaluate V(x)

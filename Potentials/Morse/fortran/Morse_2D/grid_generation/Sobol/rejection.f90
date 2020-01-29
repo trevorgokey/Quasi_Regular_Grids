@@ -1,5 +1,5 @@
 !=============================================================================80
-!                  2D Morse Sobol+Rejection Grid Generation 
+!                  2D Morse Sobol+Rejection Grid Generation
 !=============================================================================80
 !Generate gridpoints distributed via the 2D Morse Oscillator
 !This grid is generated using a sobol sequence and the rejection method
@@ -9,12 +9,12 @@
 !       Modified:
 !   4 June 2019
 !       Author:
-!   Shane Flynn 
+!   Shane Flynn
 !==============================================================================!
 module sob_rej_mod
 implicit none
 !==============================================================================!
-!                              Global Variables 
+!                              Global Variables
 !==============================================================================!
 !d              ==> Particle Dimensionality
 !Npoints        ==> Number of grid points
@@ -24,7 +24,7 @@ implicit none
 integer::d,Npoints
 double precision::E_cut,integral_P
 !==============================================================================!
-!                               Begin Module 
+!                               Begin Module
 !==============================================================================!
 contains
 !==============================================================================!
@@ -37,7 +37,7 @@ function V(x)
 !D_morse        ==>Parameter for Morse Potential
 !omega          ==>(d) Parameter for Morse Potential
 !==============================================================================!
-implicit none 
+implicit none
 double precision::x(d),V
 double precision,parameter::omega(2)=(/0.2041241,0.18371169/)
 double precision,parameter::D_morse=12.
@@ -51,10 +51,10 @@ function P(x)
 !P              ==>evaluate P(x)
 !x              ==>(d) ith particles coordinates x^i_1,..,x^i_d
 !==============================================================================!
-implicit none 
+implicit none
 double precision::x(d),P
 if(V(x)<E_cut) then
-   P=(E_cut-V(x))/integral_P
+   P=(E_cut-V(x))**(d/2.)/integral_P
 else                                              !set equal to 0 if beyond Ecut
    P=1d-20
 end if
@@ -74,7 +74,7 @@ implicit none
 integer::i
 double precision::s(d),xmin(d),xmax(d)
 INTEGER(kind = 4),INTENT(IN)::d
-INTEGER(kind = 8),INTENT(IN)::skip   
+INTEGER(kind = 8),INTENT(IN)::skip
 DOUBLE PRECISION,DIMENSION(d),INTENT(OUT)::x_unif
 x_unif=i8_sobol(int(d, 8), skip)
 !==============================================================================!
@@ -122,13 +122,13 @@ end subroutine Moments_Reg
 subroutine Moments_MMC(Moment,N_MC,xmin,xmax)
 !==============================================================================!
 !Compute low-level moments of the distribution to verify global accuracy
-!Compute moments using Metropolis Monte Carlo 
+!Compute moments using Metropolis Monte Carlo
 !This subroutine determins the box size for normalizing P; (xmin,xmax)
 !==============================================================================!
 !N_MC           ==>Number of Monte Carlo Iterations
 !mv_cutoff      ==>trial displacement move cutoff
-!r              ==>(d) coordinates 
-!r_trial        ==>(d) trial coordinates 
+!r              ==>(d) coordinates
+!r_trial        ==>(d) trial coordinates
 !s              ==>(d) trail displacement; random number for coordinates
 !xmin           ==>(d) minimum of normalization box
 !xmax           ==>(d) maximum of normalization box
@@ -146,12 +146,12 @@ do i=1,N_MC
 !                   Generate coordinates for Random move
 !           random numbers generated (0,1), make it (-1,1) ==> s=2*s-1
 !==============================================================================!
-    call random_number(s) 
+    call random_number(s)
     r_trial=r+mv_cutoff*(2*s-1)
 !==============================================================================!
 !                               Test Acceptance
 !==============================================================================!
-    call random_number(dummy) 
+    call random_number(dummy)
     if(P(r_trial)/P(r).ge.dummy) then
         r=r_trial
         do j=1,d
@@ -186,13 +186,10 @@ enddo
 Moment(1:5)=Moment(1:5)/Npoints
 end subroutine Moments
 !==============================================================================!
-!==============================================================================!
 end module sob_rej_mod
-!==============================================================================!
 !==============================================================================!
 program main
 use sob_rej_mod
-!==============================================================================!
 !==============================================================================!
 !N_MC_moments   ==># of MC moves to compute moments
 !N_reg          ==># grid points in each dimension for moments with regular grid
