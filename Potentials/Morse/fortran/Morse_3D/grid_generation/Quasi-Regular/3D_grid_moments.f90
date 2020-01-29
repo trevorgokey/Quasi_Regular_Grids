@@ -9,12 +9,12 @@
 !       Modified:
 !   19 May 2019
 !       Author:
-!   Shane Flynn 
+!   Shane Flynn
 !==============================================================================!
 module qlj_mod
 implicit none
 !==============================================================================!
-!                            Global Variables 
+!                            Global Variables
 !==============================================================================!
 !d              ==>Particle Dimensionality
 !Npoints        ==>Number of grid points
@@ -23,11 +23,11 @@ implicit none
 !integral_P     ==>Normalization for P_x
 !==============================================================================!
 integer::d,Npoints
-double precision::c_LJ,E_cut,integral_P 
+double precision::c_LJ,E_cut,integral_P
 !==============================================================================!
 contains
 !==============================================================================!
-function random_integer(Nmin,Nmax) 
+function random_integer(Nmin,Nmax)
 !==============================================================================!
 !Randomly generate an integer in the range 1-Nparticles
 !==============================================================================!
@@ -52,7 +52,7 @@ function V(x)
 !D_morse        ==>Parameter for Morse Potential
 !omega          ==>(d) Parameter for Morse Potential
 !==============================================================================!
-implicit none 
+implicit none
 double precision::x(d),V
 double precision,parameter::omega(3)=(/0.2041241,0.18371169,0.16329928/)
 double precision,parameter::D_morse=12.
@@ -66,10 +66,10 @@ function P(x)
 !P              ==>evaluate P(x)
 !x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
 !==============================================================================!
-implicit none 
+implicit none
 double precision::x(d),P
 if(V(x)<E_cut) then
-   P=(E_cut-V(x))**(d/2.)/integral_P          
+   P=(E_cut-V(x))**(d/2.)/integral_P
 else                                             !set equal to 0 if beyond Ecut
    P=1d-20
 end if
@@ -85,11 +85,11 @@ function Pair_LJ_NRG(x1,x2)
 !sigma          ==>c*sigma(P)
 !Pair_LJ_NRG    ==>Energy of the i-j q-LJ potential
 !==============================================================================!
-implicit none 
+implicit none
 double precision::x1(d),x2(d),a,b,Pair_LJ_NRG,sigma1,sigma2
 a=sum((x1(:)-x2(:))**2)
-sigma1=c_LJ*(P(x1)*Npoints)**(-1./d)    
-sigma2=c_LJ*(P(x2)*Npoints)**(-1./d)    
+sigma1=c_LJ*(P(x1)*Npoints)**(-1./d)
+sigma2=c_LJ*(P(x2)*Npoints)**(-1./d)
 b=(sigma2**2/a)**3
 a=(sigma1**2/a)**3
 Pair_LJ_NRG=a**2-a+b**2-b
@@ -174,18 +174,18 @@ end subroutine Moments_MC
 subroutine Moments_MMC(Moment,N_MC,xmin,xmax)
 !==============================================================================!
 !Compute low-level moments of the distribution to verify global accuracy
-!Compute moments using Metropolis Monte Carlo 
+!Compute moments using Metropolis Monte Carlo
 !This subroutine determins the box size for normalizing P; (xmin,xmax)
 !==============================================================================!
 !N_MC           ==>Number of Monte Carlo Iterations
 !mv_cutoff      ==>trial displacement move cutoff
-!r              ==>(d) coordinates 
-!r_trial        ==>(d) trial coordinates 
+!r              ==>(d) coordinates
+!r_trial        ==>(d) trial coordinates
 !s              ==>(d) trail displacement; random number for coordinates
 !xmin           ==>(d) minimum of normalization box
 !xmax           ==>(d) maximum of normalization box
 !Moment         ==>(0:9) 9 Lowest Moments for the distribution
-!==============================================================================! 
+!==============================================================================!
 integer::N_MC,i,j
 double precision::Moment(0:9),dummy,r_trial(d),r(d),s(d),xmin(d),xmax(d)
 double precision,parameter::mv_cutoff=0.1
@@ -198,12 +198,12 @@ do i=1,N_MC
 !                   Generate coordinates for Random move trial
 !random numbers generated (0,1), make it (-1,1) ==> s=2*s-1
 !==============================================================================!
-    call random_number(s) 
+    call random_number(s)
     r_trial=r+mv_cutoff*(2*s-1)
 !==============================================================================!
-!               Test to see if you should accept 
+!               Test to see if you should accept
 !==============================================================================!
-    call random_number(dummy) 
+    call random_number(dummy)
     if(P(r_trial)/P(r).ge.dummy) then
         r=r_trial
         do j=1,d
@@ -279,10 +279,10 @@ double precision,allocatable,dimension(:,:)::x,U
 call cpu_time(time1)
 read(*,*) d
 read(*,*) Npoints
-read(*,*) N_MC_moments  
-read(*,*) N_reg     
-read(*,*) N_MC     
-read(*,*) MMC_freq  
+read(*,*) N_MC_moments
+read(*,*) N_reg
+read(*,*) N_MC
+read(*,*) MMC_freq
 read(*,*) E_cut
 read(*,*) c_LJ
 !==============================================================================!
@@ -313,12 +313,12 @@ write(*,*) 'Test 1; Successfully normalized P(x)'
 !                Initally accept any point where Potential<Ecut
 !==============================================================================!
 i=1
-do while(i.le.Npoints)   
+do while(i.le.Npoints)
     call random_number(s)
     s(:)=xmin(:)+s(:)*(xmax(:)-xmin(:))
     if(V(s)<E_cut)then
         x(:,i)=s(:)
-        i=i+1            
+        i=i+1
     endif
 enddo
 open(unit=17,file='coor_ini.dat')
@@ -331,7 +331,7 @@ call Moments(Moment,x)
 write(*,*) 'Moments from the initial distribution, Npoints= ',Npoints
 write(*,*) Moment(1:9)
 !==============================================================================!
-!                           Compute U[x_ij] 
+!                           Compute U[x_ij]
 !                   Pairwise energies for initial Grid
 !==============================================================================!
 do i=2,Npoints
@@ -359,10 +359,10 @@ do i=1,N_MC
 !                           Generate trial move
 !        random numbers generated (0,1), make it (-1,1) ==> s=2*s-1
 !==============================================================================!
-    call random_number(s) 
+    call random_number(s)
     x0=x(:,k)+mv_cutoff*(2*s-1)
 !==============================================================================!
-!                   Only consider point if V(trial) < Ecut 
+!                   Only consider point if V(trial) < Ecut
 !                   Compute Energy Change due to Trial Move
 !==============================================================================!
     if(V(x0).lt.E_cut) then
@@ -376,7 +376,7 @@ do i=1,N_MC
             endif
         enddo
 !==============================================================================!
-!                  Accept any trial that decreases the energy 
+!                  Accept any trial that decreases the energy
 !==============================================================================!
         if(Delta_E>0d0)then
             U(:,k)=U_move(:)
@@ -392,7 +392,7 @@ do i=1,N_MC
 !==============================================================================!
     if(mod(i,MMC_freq)==0)then
         write(*,*) 'MMC Iteration', i
-        if(dble(accept)/counter<0.3)then 
+        if(dble(accept)/counter<0.3)then
             mv_cutoff=mv_cutoff*0.9
         else
             mv_cutoff=mv_cutoff*1.1
@@ -433,10 +433,10 @@ write(99,*) 'P(x) Normalization ==> ', integral_P
 write(99,*) 'c_LJ ==> ', c_LJ
 write(99,*) 'move cutoff==> ', mv_cutoff
 write(99,*) 'E_cut ==> ', E_cut
-write(99,*) 'N_MC_moments', N_MC_moments  
-write(99,*) '# gridpoints regular moments', N_reg     
-write(99,*) '# MC moves to distribute points', N_MC     
-write(99,*) 'MMC frequency', MMC_freq  
+write(99,*) 'N_MC_moments', N_MC_moments
+write(99,*) '# gridpoints regular moments', N_reg
+write(99,*) '# MC moves to distribute points', N_MC
+write(99,*) 'MMC frequency', MMC_freq
 do i=1,d
  write(99,*) i,' xmin xmax ==>', xmin(i),xmax(i)
 enddo

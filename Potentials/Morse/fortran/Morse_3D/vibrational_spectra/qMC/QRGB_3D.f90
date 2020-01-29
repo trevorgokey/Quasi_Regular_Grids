@@ -10,12 +10,12 @@
 !       Modified:
 !   15 May 2019
 !       Author:
-!   Shane Flynn 
+!   Shane Flynn
 !==============================================================================!
 module QRGB_mod
 implicit none
 !==============================================================================!
-!                            Global Variables 
+!                            Global Variables
 !==============================================================================!
 !d              ==>i-th gaussian dsionality (x^i=x^i_1,x^i_2,..,x^i_d)
 !NG             ==>Number of Gaussian Basis Functions
@@ -25,13 +25,13 @@ implicit none
 !min/max        ==>Domain for 3D Morse Potential
 !==============================================================================!
 integer::d,NG
-double precision::E_cut,c_LJ,integral_P,xmin,xmax,ymin,ymax,zmin,zmax   
+double precision::E_cut,c_LJ,integral_P,xmin,xmax,ymin,ymax,zmin,zmax
 !==============================================================================!
 contains
 !==============================================================================!
 function Potential(x_i)
 !==============================================================================!
-!Hard-coded Morse Potential Energy 
+!Hard-coded Morse Potential Energy
 !==============================================================================!
 !x              ==>(d) ith particles coordinate x^i_1,..,x^i_d
 !Potential      ==>evaluate Potential(x)
@@ -45,7 +45,7 @@ double precision,parameter::c_y=0.18371169
 double precision,parameter::c_z=0.16329928
 double precision::x_i(d),Potential
 Potential=D_morse*((exp(-c_x*x_i(1))-1)**2+(exp(-c_y*x_i(2))-1)**2+&
-    (exp(-c_z*x_i(3))-1)**2)  
+    (exp(-c_z*x_i(3))-1)**2)
 end function Potential
 !==============================================================================!
 function P_x(x_i)
@@ -56,11 +56,11 @@ function P_x(x_i)
 !x_i            ==>(d) ith particles coordinate x^i_1,..,x^i_d
 !Del_par        ==>Delta parameter for P(x) distribution, :=10% of Ecut
 !==============================================================================!
-implicit none 
+implicit none
 double precision::Del_par,x_i(d),P_x
 Del_par=0.01*E_cut
 if(Potential(x_i)<E_cut) then
-   P_x=(E_cut+Del_par-Potential(x_i))/integral_P
+   P_x=(E_cut+Del_par-Potential(x_i))**(d/2.)/integral_P
 else                                              !set equal to 0 if beyond Ecut
    P_x=1d-20
 end if
@@ -69,7 +69,7 @@ end function P_x
 subroutine normalize_P(N_Eval)
 !==============================================================================!
 !Normalize the target distribution function
-!For Morse: integrating over [a,b],[a,b],[a,b] 
+!For Morse: integrating over [a,b],[a,b],[a,b]
 !int P(r)~Area_Square/N sum_n=1,N P(r_n)
 !==============================================================================!
 !norm           ==>evaluate P(r)
@@ -94,7 +94,7 @@ do while(counter.lt.N_Eval)                   !only want points within the E_cut
 enddo
 norm=norm*(xmax-xmin)*(ymax-ymin)*(zmax-zmin)/N_eval
 integral_P=norm
-end subroutine normalize_P 
+end subroutine normalize_P
 !==============================================================================!
 end module QRGB_mod
 !==============================================================================!
@@ -106,7 +106,7 @@ use QRGB_mod
 !x              ==>(d) all atom coordinates
 !x0             ==>(d) store previous coordinate before trial move
 !freq           ==>Interval to update mv_cutoff size
-!accept         ==>number of accepted trial moves, for acceptance~50%  
+!accept         ==>number of accepted trial moves, for acceptance~50%
 !counter        ==>total number of moves, for acceptance~50%
 !x2 ith gaussians coordinates for matrix elements
 !z integration sequence form matrix elements
@@ -167,10 +167,10 @@ call normalize_P(N_Px)
 open(16,File=grid_in)
 do n=1,NG
     read(16,*) x(:,n)
-enddo 
+enddo
 close(16)
 !==============================================================================!
-!                          Generate Alpha Scaling 
+!                          Generate Alpha Scaling
 !==============================================================================!
 open(unit=17,file='alphas.dat')
 do i=1,NG
@@ -193,7 +193,7 @@ do i=1,NG
 enddo
 !==============================================================================!
 !                   Check to see if S is positive definite
-!If this is removed, you need to allocate llapack arrays before Hamiltonian 
+!If this is removed, you need to allocate llapack arrays before Hamiltonian
 !==============================================================================!
 lwork=max(1,3*NG-1)
 allocate(work(max(1,lwork)))
@@ -213,14 +213,14 @@ do l=1,Nsobol
 enddo
 write(*,*) 'Test 5; Successfully Generated Integration Sequence'
 !==============================================================================!
-!                              Theory Eigenvalues Value 
+!                              Theory Eigenvalues Value
 !==============================================================================!
 open(25,File=theory_in)
 do i=1,NG
     read(25,*) theory(i)
-enddo 
+enddo
 close(25)
-!==============================================================================! 
+!==============================================================================!
 !                             Evaluate Potential
 !==============================================================================!
 Vmat=0d0
@@ -230,7 +230,7 @@ do counter=1,Nsobol/data_freq
       do j=i,NG
          x_ij(:)=(alpha(i)*x(:,i)+alpha(j)*x(:,j))/(alpha(i)+alpha(j))
          do l=(counter-1)*data_freq+1,counter*data_freq
-            Vmat(i,j)=Vmat(i,j)+Potential(x_ij(:)+z(:,l)/sqrt(alpha(i)+alpha(j))) 
+            Vmat(i,j)=Vmat(i,j)+Potential(x_ij(:)+z(:,l)/sqrt(alpha(i)+alpha(j)))
          enddo
       enddo
    enddo

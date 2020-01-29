@@ -9,12 +9,12 @@
 !       Modified:
 !   5 June 2019
 !       Author:
-!   Shane Flynn 
+!   Shane Flynn
 !==============================================================================!
 module rej_mod
 implicit none
 !==============================================================================!
-!                            Global Variables 
+!                            Global Variables
 !==============================================================================!
 !d              ==> Particle Dimensionality
 !Npoints        ==> Number of grid points
@@ -22,7 +22,7 @@ implicit none
 !integral_P     ==> Normalization for P_x
 !==============================================================================!
 integer::d,Npoints
-double precision::E_cut,delta,integral_P 
+double precision::E_cut,delta,integral_P
 !==============================================================================!
 contains
 !==============================================================================!
@@ -39,7 +39,7 @@ implicit none
 integer::i
 double precision::s(d),xmin(d),xmax(d)
 INTEGER(kind=4),INTENT(IN)::d
-INTEGER(kind=8),INTENT(IN)::skip   
+INTEGER(kind=8),INTENT(IN)::skip
 DOUBLE PRECISION,DIMENSION(d),INTENT(OUT)::x_unif
 x_unif=i8_sobol(int(d, 8), skip)
 !==============================================================================!
@@ -57,7 +57,7 @@ function V(x)
 !D_morse        ==>Parameter for Morse Potential
 !omega          ==>(d) Parameter for Morse Potential
 !==============================================================================!
-implicit none 
+implicit none
 double precision::x(d),V
 double precision,parameter::omega(3)=(/0.2041241,0.18371169,0.16329928/)
 double precision,parameter::D_morse=12.
@@ -71,10 +71,10 @@ function P(x)
 !P              ==>evaluate P(x)
 !x              ==>(d) ith particles coordinates x^i_1,..,x^i_d
 !==============================================================================!
-implicit none 
+implicit none
 double precision::x(d),P
 if(V(x)<E_cut) then
-   P=(E_cut-V(x)+delta)/integral_P          
+   P=(E_cut-V(x)+delta)**(d/2.)/integral_P
 else        !set equal to 0 if beyond Ecut
    P=1d-20
 end if
@@ -145,15 +145,15 @@ xmin=r
 xmax=r
 do i=1,N_MC
 !==============================================================================!
-!                   Generate coordinates for trial move 
+!                   Generate coordinates for trial move
 !       random numbers generated (0,1), make it (-1,1) ==> s=2*s-1
 !==============================================================================!
-    call random_number(s) 
+    call random_number(s)
     r_trial=r+mv_cutoff*(2*s-1)
 !==============================================================================!
 !                            Test acceptance
 !==============================================================================!
-    call random_number(dummy) 
+    call random_number(dummy)
     if(P(r_trial)/P(r).ge.dummy) then
         r=r_trial
         do j=1,d
@@ -220,8 +220,8 @@ call cpu_time(time1)
 read(*,*) d
 read(*,*) Npoints
 read(*,*) E_cut
-read(*,*) N_MC_moments  
-read(*,*) N_reg     
+read(*,*) N_MC_moments
+read(*,*) N_reg
 skip=Npoints
 !==============================================================================!
 !                               Allocations
@@ -285,8 +285,8 @@ write(99,*) 'Npoints ==> ', Npoints
 write(99,*) 'P Normalization Iterations (N_MC) ==> ', N_MC_moments
 write(99,*) 'P(x) Normalization ==> ', integral_P
 write(99,*) 'E_cut ==> ', E_cut
-write(99,*) 'N_MC_moments', N_MC_moments  
-write(99,*) '# gridpoints regular moments', N_reg     
+write(99,*) 'N_MC_moments', N_MC_moments
+write(99,*) '# gridpoints regular moments', N_reg
 do i=1,3
  write(99,*) i,' xmin xmax ==>', xmin(i),xmax(i)
 enddo
