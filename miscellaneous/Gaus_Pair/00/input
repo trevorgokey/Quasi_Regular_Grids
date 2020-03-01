@@ -1,8 +1,0 @@
-2           !d:         dimensionality of your gridpoints
-400         !NG:        number of gridpoints
-1000000        !NMC:       number of MMC steps for generating grid
-300		!N_reg
-100000         ! LJ
-1000         ! LJ
-12        !E_cut:     Energy Cutoff Contour (7.5 form Garaschuk paper 3D Morse)
-1.5           !c_LJ:      Scaling parameter for LJ sigma
