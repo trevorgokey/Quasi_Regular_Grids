@@ -62,4 +62,4 @@ grids.a: $(GRID_OBJS)
 .PHONY: clean
 
 clean:
-	rm -rf *.o *.mod *.dat test *.a
+	rm -rf *.o *.mod *.dat qrg *.a
