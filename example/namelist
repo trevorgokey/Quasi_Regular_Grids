@@ -13,7 +13,7 @@
 &grid_potential_LJ
   cLJ              = 1
   opt_type         = 1      ! MC=1 CG=2
-  opt_steps        = 10000    ! -1=inf, 0=None
+  opt_steps        = 10000  ! -1=inf, 0=None
   opt_eps          = 1d-7   !  considered 0
   opt_tune         = 1      !
   opt_dx           = 1.0
