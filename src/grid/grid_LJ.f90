@@ -3,7 +3,7 @@ module grid_LJ_class
     use grid_base_class, only: grid_t, grid_base_init,initial_input_from_xyz
 
     type, extends( grid_t) :: grid_LJ_t
-        integer :: opt_steps = 0, opt_tune = 0, opt_type = 0
+        integer :: opt_steps = 0, opt_tune = 0, opt_type = 0, saveevery = 1
         double precision :: opt_eps = 1d-7, cLJ = 1.0, mv_cutoff
     contains
         procedure, public :: V
@@ -21,12 +21,12 @@ contains
         type (grid_LJ_t), target :: grid_LJ_init
         !class (grid_t), intent(out), allocatable :: this
         integer,        intent(in ) :: input_fd, points_nr
-        integer :: grid_input, opt_type, opt_steps,  opt_tune
+        integer :: grid_input, opt_type, opt_steps,  opt_tune, saveevery
         double precision :: opt_eps, cLJ, opt_dx
         character(len=*) :: grid_from
         !type (grid_LJ_t), target :: instance
         class (grid_t), pointer :: this
-        namelist /grid_potential_LJ/ cLJ, opt_type, opt_steps, opt_eps, opt_tune, opt_dx
+        namelist /grid_potential_LJ/ cLJ, opt_type, opt_steps, opt_eps, opt_tune, opt_dx, saveevery
         read( unit=input_fd, nml=grid_potential_LJ)
         !allocate( grid_LJ_t::this)
         grid_LJ_init%cLJ = cLJ
@@ -36,6 +36,7 @@ contains
         grid_LJ_init%opt_eps = opt_eps
         grid_LJ_init%mv_cutoff = opt_dx
         grid_LJ_init%points_nr = points_nr
+        grid_LJ_init%saveevery = saveevery
         print*, "GRID Allocating", (3*points_nr + points_nr*points_nr) * 8, " bytes"
         !allocate( this%X(3, points_nr), this%Vij( points_nr, points_nr) )
         this => grid_LJ_init
@@ -115,12 +116,14 @@ contains
         double precision, dimension(:), allocatable :: s, x0
         double precision, dimension(:), allocatable :: U_move
         double precision :: Delta_E, mv_cutoff=1.0, deltae1=0.0, V, V_trial, P, E, SDX
-        integer :: i, j, k, counter=0, Npoints, accept=0, hotaccept=0,plt_count=0, MMC_freq, N_MC, newmove=0
+        integer :: i, j, k, counter=0, Npoints, accept=0, hotaccept=0,plt_count=0, MMC_freq, N_MC, newmove=0, framesaved=1
+        integer :: saveevery
+        character(1) :: saved = 'N'
         !double precision, dimension(this%points_nr,this%points_nr)  :: Vij
         !double precision, dimension(3,this%points_nr)  :: X
         !character(len=*), parameter :: fmt = "(I8,A1,I10,A5,F6.3,A5,E8.6,A5,E8.6,A5,E8.6,5A,E8.6,A7,F6.3,5A,I4,I6)"
-        character(len=*), parameter :: fmt = '(I10, " /", I10, "   cLJ=", ES13.6, "   DX=", ES13.6, "   GE=", ES13.6, &   
-            &"   GDE=", ES13.6,"   SE=", ES13.6, "   <SDX>= ", ES13.6, "   acc=", F8.4, "  hot=", I4)'
+        character(len=*), parameter :: fmt = '(I10, " /", I10,1x, A1, "  cLJ=", ES13.6, "   DX=", ES13.6, "   GE=", ES13.6, &   
+            &"   GDE=", ES13.6,"   SE=", ES13.6, "   <SDX>= ", ES13.6, " cold=", I4, "  hot=", I4, "   acc=", F8.4 )'
 
         !Vij = this%Vij
         !X   = this%X
@@ -132,6 +135,7 @@ contains
         MMC_freq = this%opt_tune
         N_MC     = this%opt_steps
         mv_cutoff= this%mv_cutoff
+        saveevery = this%saveevery 
 
         !open(unit=18,file='mv_cut.dat')
         !open(unit=19,file='delE.dat')
@@ -214,21 +218,24 @@ contains
                     endif
                 endif
             enddo
-        if( newmove > 0) then
+        if( newmove > 0 .and. mod( i, saveevery) == 0 ) then
             open(unit=20,file='grid.xyz', access='APPEND')
                 write(20,*) Npoints
-                write(20,*)
+                write(20,*) "step", i, "frame", framesaved
                 do j=1,Npoints
                     write(20,*) "C     ", this%X(:,j)
                 enddo
             close(20)
             newmove = 0
+            framesaved = framesaved + 1
+            saved='Y'
         end if
         
         if(mod(i,MMC_freq)==0)then
         !character(len=*), parameter :: fmt = '(I10, "/", I10, " cLJ ", E6.3, " DX=", E6.3, " GE=", E7.4, " GDE=", E7.4," SE ",'&
         !    &'E7.4, " <SDX> ", E6.3, " acc=", I7, "/", I8)'
-            print fmt, i, N_MC, this%cLJ, mv_cutoff, E, deltae1, V, SDX, dble(accept)/dble(Npoints * MMC_freq), hotaccept
+            print fmt, i, N_MC, saved, this%cLJ, mv_cutoff, E, deltae1, V, SDX, accept-hotaccept, hotaccept, &
+                & dble(accept + hotaccept)/dble(Npoints * MMC_freq)
             if(dble(accept)/counter<0.5)then 
                 mv_cutoff=mv_cutoff*0.999
             else
@@ -262,6 +269,7 @@ contains
             plt_count=plt_count+1
             deltae1=0.0
         endif
+        saved='N'
         !write(*,*) "wrote xyz"
         !open(unit=21,file='grid.dat')
         !    do j=1,Npoints
