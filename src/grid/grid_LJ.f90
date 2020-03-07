@@ -44,8 +44,9 @@ contains
 
         select case( grid_input)
             case (1)
+                call this%initial_input_from_xyz( grid_from, 1)
             case (2)
-                call this%initial_input_from_xyz( grid_from)
+                call this%initial_input_from_xyz( grid_from, 0)
             case (3)
         end select
         !grid_LJ_init%V

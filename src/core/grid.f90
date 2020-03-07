@@ -36,8 +36,9 @@ contains
         print*, "GRID init"
         select case( grid_input)
             case (1)
+                call this%initial_input_from_xyz( grid_from, 1)
             case (2)
-                call this%initial_input_from_xyz( grid_from)
+                call this%initial_input_from_xyz( grid_from, 0)
             case (3)
         end select
         !this%test = input_fd
@@ -51,10 +52,12 @@ contains
         write (*,*) "GRID grid_set_system"
     end subroutine
 
-    subroutine initial_input_from_xyz(this, fname )
-        integer :: i, j, k, readin, fid=15, Npoints, Natoms
+    subroutine initial_input_from_xyz(this, fname, random_kick)
+        integer :: i, j, k, readin, fid=15, Npoints, Natoms, random_kick
         class (grid_t) :: this
         character(len=*) :: fname
+        real(kind=8), allocatable, dimension(:) :: dr 
+        
         Npoints = this%points_nr
         if( allocated(this%X) ) then
             print*, "ALLOCATED"
@@ -91,6 +94,14 @@ contains
             enddo
         endif
         end do
+        if( random_kick > 0) then
+            allocate( dr( size( this%X( :, i))))
+            do i=1, Npoints
+                call random_number( dr)
+                dr = dr*2.0 - 1.0
+                this%X(:, i) = this%X(:, i) + dr
+            enddo
+        endif 
         close( fid)
     end subroutine
 
