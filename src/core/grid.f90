@@ -56,7 +56,7 @@ contains
         integer :: i, j, k, readin, fid=15, Npoints, Natoms, random_kick
         class (grid_t) :: this
         character(len=*) :: fname
-        real(kind=8), allocatable, dimension(:) :: dr 
+        double precision, allocatable, dimension(:) :: dr 
         
         Npoints = this%points_nr
         if( allocated(this%X) ) then
@@ -99,7 +99,7 @@ contains
             do i=1, Npoints
                 call random_number( dr)
                 dr = dr*2.0 - 1.0
-                this%X(:, i) = this%X(:, i) + dr
+                this%X(:, i) = this%X(:, i) + dr*3
             enddo
         endif 
         close( fid)

@@ -4,9 +4,11 @@ module space_base_class
     implicit none
 
     type, abstract :: space_t
+        integer :: d
     contains
         private
         procedure(V), deferred, public :: V
+        procedure(dVdx), deferred, public :: dVdx
     end type 
 
     abstract interface
@@ -16,6 +18,15 @@ module space_base_class
             class (space_t), intent(in) :: this
             double precision :: V
             double precision, dimension(:), intent(in) :: x
+        end function
+
+        function dVdx( this, x)
+            import :: space_t
+            implicit none
+            class (space_t), intent(in) :: this
+            double precision :: V
+            double precision, dimension(this%d), intent(in) :: x
+            double precision, dimension(this%d) :: dVdx
         end function
     end interface
 
