@@ -299,7 +299,7 @@ contains
         !print*,"X allocated?", allocated( this%X)
         Eprev = 0.0
         Vprev = 0.0
-        Vgprev = this%U() / 2.0
+        Vgprev = this%U() 
         do k=1,Npoints
             Vprev = Vprev + this%system%V( this%X(:,k)) * 2.0
             do j=k+1, Npoints
@@ -357,7 +357,7 @@ contains
                 this%X(:,j) = this%X(:,j) + dUdx(:,j)
             enddo
             V = 0.0
-            Vg = this%U() / 2.0
+            Vg = this%U() 
             do k=1,Npoints
                 V = V + this%system%V( this%X(:,k)) * 2.0
                 do j=k+1, Npoints
