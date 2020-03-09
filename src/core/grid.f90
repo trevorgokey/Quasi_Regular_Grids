@@ -99,7 +99,7 @@ contains
             do i=1, Npoints
                 call random_number( dr)
                 dr = dr*2.0 - 1.0
-                this%X(:, i) = this%X(:, i) + dr*3
+                this%X(:, i) = this%X(:, i) + dr*1
             enddo
         endif 
         close( fid)

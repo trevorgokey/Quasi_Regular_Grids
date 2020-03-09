@@ -53,13 +53,15 @@ contains
             dist = (sum( (x(:) - this%X(:,i))**2))
             !if ( dist < sigma*3 ) then
             do j=1, this%d
-                dVdx(j) = dVdx(j) + (x(j) - this%X(j,i))*exp(-dist/this%cSigma) 
+                dVdx(j) = dVdx(j) + this%cPrefac * 2.0*(x(j) - this%X(j,i))/this%cSigma*exp(-dist/this%cSigma) 
+                !print*, i, "dx= ", (x(j) - this%X(j,i)), x, " center= ", this%X(:,i)
             enddo
             !print*, "SYS_GBAS   energy V dist x X", V, dist, x(:), this%X(:,i)
             !print*, "SYS_GBAS   energy dist", sqrt(sum( (x(:) - this%X(:,i))**2)) !x(:) - this%X(:,i)
             !end if
         end do
-        dVdx(:) = dVdx(:) * 2.0 * this%cPrefac * this%cSigma
+        !dVdx(:) = dVdx(:)
+        !print*, "SYS_GBAS   dVdx", dVdx
 
     end function
 
