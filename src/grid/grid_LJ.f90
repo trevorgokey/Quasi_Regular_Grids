@@ -166,7 +166,7 @@ contains
             dx = x2(i) - x1(i)
             !print*, "dx ", dx
             !print*, "dPdx for i=", i, P, dP
-            P = this%system%P( x1)
+            P = this%system%P( x2)
             a = 0.0
             b = 0.0
             !print*, "i j sigma1", i, j, sigma1
@@ -238,7 +238,7 @@ contains
         do i=1,this%points_nr
             !print*,"  j", i, " dist=", sqrt(sum((this%X(:,i) - x)**2))
             if( sqrt(sum((this%X(:,i) - x)**2)) > 0.0) then
-                dVdx(:) = dVdx(:) - this%duijdx( x, this%X(:,i))
+                dVdx(:) = dVdx(:) - this%duijdx( x, this%X(:,i)) / 2.0
                 !print*,"duijdx i j", x, i, this%duijdx( x, this%X(:,i)), "total=", dVdx(:) 
             else
             endif
@@ -254,7 +254,10 @@ contains
         open(unit=20,file='grid.xyz', status='REPLACE')
         close(20)
         !call optimize_MC( this)
+        !do while (this%cLJ < 6)
         call optimize_CG( this)
+        !    this%cLJ = this%cLJ *2
+        !enddo
         !call optimize_MC( this)
         !call optimize_CG( this)
         !call optimize_MC( this)
@@ -270,15 +273,16 @@ contains
         double precision, dimension(this%points_nr)  :: buff
         double precision, dimension(this%system%d)  :: mean
         double precision :: Delta_E, mv_cutoff=1.0, mv_cutoff_ref=1.0, deltae1=0.0, Eprev, Vprev, V, V_trial, P, E, SDX, dx=1.0
-        double precision :: Vs, Vsprev
+        double precision :: Vs, Vsprev, F, Fprev
         integer :: i, j, k, counter=0, Npoints, accept=0, hotaccept=0,plt_count=0, MMC_freq, N_MC, newmove=0, framesaved=1
         integer :: saveevery
+        logical :: converged = .false.
         character(1) :: saved = 'N'
         !double precision, dimension(this%points_nr,this%points_nr)  :: Vij
         !double precision, dimension(3,this%points_nr)  :: X
         !character(len=*), parameter :: fmt = "(I8,A1,I10,A5,F6.3,A5,E8.6,A5,E8.6,A5,E8.6,5A,E8.6,A7,F6.3,5A,I4,I6)"
-        character(len=*), parameter :: fmt = '(I10, " /", I10,1x, A1, "  cLJ=", ES13.6, "   DX=", ES13.6, "   GE=", ES13.6, &   
-            &"   GDE=", ES13.6,"   SE=", ES13.6, "   <SDX>= ", ES13.6, " cold=", I4, "  hot=", I4, "   acc=", F8.4 )'
+        character(len=*), parameter :: fmt = '(I10, " /", I10,1x, A1, "  F=", ES15.8, "  DF=", ES15.8, "  E=", ES15.8, &
+            "   DE=", ES15.8, "   DX=", ES15.8, "   V=", ES15.8, "   dV=", ES15.8,"   Vg=", ES15.8, "   dVg= ", ES15.8 )'
 
         !Vij = this%Vij
         !X   = this%X
@@ -357,15 +361,16 @@ contains
             newmove = 0
             !print*, "eval grad", i
             mean(:) = 0.0
-            E = 0.0
-            !$OMP parallel default(none) shared(this,dUdx, mv_cutoff, Npoints) private(j,E)
+            F = 0.0
+            !$OMP parallel default(none) shared(this,dUdx, buff, mv_cutoff, Npoints) private(j,E, F)
             !$OMP do 
             do j=1, Npoints
                 dUdx(:,j) = -this%dVdx( this%X(:, j))
                 !print*,j, "dUdx is", dUdx(:,j)
-                E = sqrt(sum(dUdx(:,j)**2))
-                if( E > mv_cutoff ) then
-                    dUdx(:,j) = dUdx(:,j) / E * mv_cutoff
+                F = sqrt(sum(dUdx(:,j)**2))
+                buff(j) = F
+                if( F > mv_cutoff ) then
+                    dUdx(:,j) = dUdx(:,j) / F * mv_cutoff
                 endif
                 !E = min(mv_cutoff, E)
                 !dUdx(:,j) = dUdx(:,j) !* E 
@@ -376,18 +381,25 @@ contains
             !$OMP end do
             !$OMP end parallel
 
+            F = 0.0
+            do j=1, Npoints
+                F = F + buff(j)
+            enddo
+            F = F/Npoints
+
             !$OMP parallel default(none) shared(dUdx, buff, Npoints) private(j)
             !$OMP do 
             do j=1, Npoints
-                buff =  sqrt(sum((dUdx(:,j))**2))
+                buff(j) = sqrt(sum(dUdx(:,j)**2))
             enddo
             !$OMP end do
             !$OMP end parallel
 
             E = 0.0
             do j=1, Npoints
-                E = E + sqrt(sum((dUdx(:,j))**2))
+                E = E + buff(j)
             enddo
+            E = E/Npoints
 
             !$OMP parallel default(none) shared(dUdx, this, Npoints) private(j)
             !$OMP do 
@@ -397,8 +409,7 @@ contains
             !$OMP end do
             !$OMP end parallel
             
-            V = 0.0
-            Vg = this%U() / 2.0
+            Vg = this%U()
 
             !$OMP parallel default(none) shared(this, buff, Npoints) private(j)
             !$OMP do 
@@ -413,6 +424,7 @@ contains
             !$OMP end do
             !$OMP end parallel
 
+            V = 0.0
             do j=1,Npoints
                 V = V + buff(j) 
                 !do j=k+1, Npoints
@@ -422,59 +434,89 @@ contains
                 !enddo
             enddo
             !newmove=1
-            if( Eprev .ne. 0.0 ) then
+            !print fmt,  i, N_MC, 'N', F, F - Fprev, V+Vg, V+Vg-Vprev-Vgprev, E, V, V - Vprev, Vg, Vg - Vgprev
+            if( i > 1 ) then
                 !if( sign(1.0d1,Eprev) .ne. sign(1.0d1,E) .or. V-Vprev > 0) then
 
-                !if( V+Vg-Vprev-Vgprev > 0) then
-                !    if( mv_cutoff .eq. mv_cutoff_ref) then
-                !        totaldUdx(:,:) = this%X(:,:)
-                !    endif
-                !        
-                !    mv_cutoff = mv_cutoff * .95
-                !    newmove=0
-                !    do j=1, Npoints
-                !        this%X(:,j) = this%X(:,j) - dUdx(:,j)
-                !    enddo
-                !else
-                !    !print*, "step", i, "USUM", sum( dUdx), "DX", E/Npoints, " V= ", V, " dV= ", V - Vprev
-                !    print*, "step", i, " E= ", V+Vg, "DX", E/Npoints, " V= ", V, " dV= ", V - Vprev, " Vg= ", Vg, " dVg= ", &
-                !        & Vg - Vgprev 
-                !    newmove=1
-                !    Eprev = E
-                !    mv_cutoff = mv_cutoff_ref
-                !    Vprev = V
-                !    Vgprev = Vg
-                !endif
-                !if (newmove .eq. 0 .and. mv_cutoff < this%opt_eps*10 .and. mv_cutoff_ref > this%opt_eps) then
-                !    this%X(:,:) = totaldUdx(:,:)
-                !    newmove=1
-                !    mv_cutoff_ref = mv_cutoff_ref * .95
-                !    print*, "****", i, " E= ", V+Vg, "DX", E/Npoints, " V= ", V, " dV= ", V - Vprev, " Vg= ", Vg, " dVg= ", &
-                !        & Vg - Vgprev 
-                !    print*, "mv_cutoff shrunk to", mv_cutoff_ref
-                !    mv_cutoff = mv_cutoff_ref
-                !    Eprev = E
-                !    Vprev = V
-                !    Vgprev = Vg
-                !endif
+                if( V+Vg-Vprev-Vgprev > 0 ) then
+                    if( mv_cutoff .eq. mv_cutoff_ref) then
+                        totaldUdx(:,:) = this%X(:,:) 
+                    endif
+                        
+                    mv_cutoff = mv_cutoff * .95
+                    newmove=0
+                    !$OMP parallel default(none) shared(this, dUdx, Npoints) private(j)
+                    !$OMP do 
+                    do j=1, Npoints
+                        this%X(:,j) = this%X(:,j) - dUdx(:,j)
+                    enddo
+                    !$OMP end do
+                    !$OMP end parallel
+                else
+                    !print*, "step", i, "USUM", sum( dUdx), "DX", E/Npoints, " V= ", V, " dV= ", V - Vprev
+                    !print fmt,  i, N_MC, '!', F, F - Fprev, V+Vg, V+Vg-Vprev-Vgprev, E, V, V - Vprev, Vg, Vg - Vgprev
+                    newmove=1
+                    !Eprev = E
+                    mv_cutoff = mv_cutoff_ref
+                    !Vprev = V
+                    !Vgprev = Vg
+                    !Fprev = F
+                endif
+                if (newmove .eq. 0 .and. mv_cutoff < this%opt_eps*10 .and. mv_cutoff_ref > this%opt_eps) then
+                    this%X(:,:) = totaldUdx(:,:) 
+                    newmove=1
+                    mv_cutoff_ref = mv_cutoff_ref * .95
+                    print fmt,  i, N_MC, '!', F, F - Fprev, V+Vg, V+Vg-Vprev-Vgprev, E, V, V - Vprev, Vg, Vg - Vgprev
+                    print*, "**** mv_cutoff shrunk to", mv_cutoff_ref
+                    mv_cutoff = mv_cutoff_ref
+                    !Eprev = E
+                    !Vprev = V
+                    !Vgprev = Vg
+                    !Fprev = F
+                    continue
+                endif
 
             else
+                !Eprev = E
+                !Vprev = V
+                !Vgprev = Vg
+                !Fprev = F
+            endif
+            !newmove=1
+            !if( E/Npoints < this%opt_eps .or. mv_cutoff_ref < this%opt_eps) then
+            if( newmove > 0) then
+            !if( newmove > 0 ) then
+                converged = .false.
+                if( abs(F-Fprev) < this%opt_eps) then
+                    print *, "force convergence" 
+                    converged = .true.
+                endif
+                if( abs(V+Vg - Vprev-Vgprev) < this%opt_eps) then
+                    print *, "energy convergence"
+                    converged = .true.
+                endif
+                if( mod( i, saveevery) == 0 .or. converged) then
+                    print fmt,  i, N_MC, 'Y', F, F - Fprev, V+Vg, V+Vg-Vprev-Vgprev, E, V, V - Vprev, Vg, Vg - Vgprev
+                    !print*, "step", i, " F= ", F, " dF= ", F - Fprev, " E= ", V+Vg, "DX", E, " V= ", V, " dV= ", V - Vprev, &
+                    !    & " Vg= ", Vg, " dVg= ", Vg - Vgprev
+                    open(unit=20,file='grid.xyz', access='APPEND')
+                        write(20,*) Npoints
+                        write(20,*) "step", i, "frame", framesaved, " E ", E, " V ", V, " Vg ", Vg, " F ", F
+                        do j=1,Npoints
+                            write(20,*) "C     ", this%X(:,j)
+                        enddo
+                    close(20)
+                    saved='Y'
+                    newmove = 1
+                    framesaved = framesaved + 1
+                endif
+                if( converged) then
+                    exit
+                endif
                 Eprev = E
                 Vprev = V
                 Vgprev = Vg
-            endif
-            newmove=1
-            print*, "step", i, " E= ", V+Vg, "DX", E/Npoints, " V= ", V, " dV= ", V - Vprev, " Vg= ", Vg, " dVg= ", &
-                & Vg - Vgprev 
-            Eprev = E
-            Vprev = V
-            Vgprev = Vg
-            !if( E/Npoints < this%opt_eps .or. mv_cutoff_ref < this%opt_eps) then
-            if( E/Npoints < this%opt_eps) then
-                print*, "****", i, " E= ", V+Vg, "DX", E/Npoints, " V= ", V, " dV= ", V - Vprev, " Vg= ", Vg, " dVg= ", &
-                    & Vg - Vgprev 
-                print*, "converged!"
-                exit
+                Fprev = F
             endif
 
 !            newmove = 0
@@ -533,19 +575,6 @@ contains
 !                    endif
 !                endif
 !            enddo
-            if( newmove > 0 .and. mod( i, saveevery) == 0 ) then
-            !if( newmove > 0 ) then
-                open(unit=20,file='grid.xyz', access='APPEND')
-                    write(20,*) Npoints
-                    write(20,*) "step", i, "frame", framesaved, " E ", E, " V ", V, " Vg ", Vg
-                    do j=1,Npoints
-                        write(20,*) "C     ", this%X(:,j)
-                    enddo
-                close(20)
-                newmove = 0
-                framesaved = framesaved + 1
-                saved='Y'
-            endif
         
         !if(mod(i,MMC_freq)==0)then
         !!character(len=*), parameter :: fmt = '(I10, "/", I10, " cLJ ", E6.3, " DX=", E6.3, " GE=", E7.4, " GDE=", E7.4," SE ",'&
