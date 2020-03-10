@@ -39,8 +39,8 @@ contains
         end do
         close( fid)
         print*, "SYSTEM_BASIS read_centers file ", trim(this%centers_fnm), " Ncenters=", this%Ncenters, "d=", this%d 
-        print*, "coords"
-        print*, this%X
+        !print*, "coords"
+        !print*, this%X
     end subroutine
 
 end module

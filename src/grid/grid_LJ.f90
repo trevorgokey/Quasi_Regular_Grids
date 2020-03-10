@@ -270,10 +270,11 @@ contains
         double precision, dimension(this%points_nr)  :: buff
         double precision, dimension(this%system%d)  :: mean
         double precision :: Delta_E, mv_cutoff=1.0, mv_cutoff_ref=1.0, deltae1=0.0, Eprev, Vprev, V, V_trial, P, E, SDX, dx=1.0
-        double precision :: Vs, Vsprev
+        double precision :: Vs, Vsprev, time1, time2
         integer :: i, j, k, counter=0, Npoints, accept=0, hotaccept=0,plt_count=0, MMC_freq, N_MC, newmove=0, framesaved=1
         integer :: saveevery
         character(1) :: saved = 'N'
+        logical, parameter :: timing = .false.
         !double precision, dimension(this%points_nr,this%points_nr)  :: Vij
         !double precision, dimension(3,this%points_nr)  :: X
         !character(len=*), parameter :: fmt = "(I8,A1,I10,A5,F6.3,A5,E8.6,A5,E8.6,A5,E8.6,5A,E8.6,A7,F6.3,5A,I4,I6)"
@@ -315,6 +316,8 @@ contains
         Vgprev = this%U() / 2.0
         totaldUdx(:,:) = 0.0
         buff(:) = 0.0
+        if( timing) print*, "SYSTEM V"
+        call cpu_time( time1)
         !$OMP parallel default(none) shared(this, buff, Npoints) private(k)
         !$OMP do 
         do k=1,Npoints
@@ -331,8 +334,10 @@ contains
         do k=1,Npoints
             Vprev = Vprev + buff(k)
         enddo
+        call cpu_time( time2)
+        if( timing) print*, "TIME ", time2 - time1
 
-        print*,"grid ", this%X
+        !print*,"grid ", this%X
         do
             i = i + 1
             if ( N_MC == 0 .or. ( N_MC > -1 .and. i == N_MC)) then
@@ -358,6 +363,8 @@ contains
             !print*, "eval grad", i
             mean(:) = 0.0
             E = 0.0
+            if( timing) print*,"DVDX"
+            call cpu_time( time1)
             !$OMP parallel default(none) shared(this,dUdx, mv_cutoff, Npoints) private(j,E)
             !$OMP do 
             do j=1, Npoints
@@ -376,6 +383,10 @@ contains
             !$OMP end do
             !$OMP end parallel
 
+            call cpu_time( time2)
+            if( timing) print*, "TIME ", time2 - time1
+            if( timing) print*,"SUM DVDX"
+            call cpu_time( time1)
             !$OMP parallel default(none) shared(dUdx, buff, Npoints) private(j)
             !$OMP do 
             do j=1, Npoints
@@ -388,7 +399,11 @@ contains
             do j=1, Npoints
                 E = E + sqrt(sum((dUdx(:,j))**2))
             enddo
+            call cpu_time( time2)
+            if( timing) print*, "TIME ", time2 - time1
 
+            if( timing) print*,"DVDX *DX"
+            call cpu_time( time1)
             !$OMP parallel default(none) shared(dUdx, this, Npoints) private(j)
             !$OMP do 
             do j=1, Npoints
@@ -396,10 +411,18 @@ contains
             enddo
             !$OMP end do
             !$OMP end parallel
+            call cpu_time( time2)
+            if( timing) print*, "TIME ", time2 - time1
             
             V = 0.0
+            if( timing) print*,"U"
+            call cpu_time( time1)
             Vg = this%U() / 2.0
+            call cpu_time( time2)
+            if( timing) print*, "TIME ", time2 - time1
 
+            if( timing) print*,"SYSTEM V"
+            call cpu_time( time1)
             !$OMP parallel default(none) shared(this, buff, Npoints) private(j)
             !$OMP do 
             do j=1,Npoints
@@ -422,6 +445,8 @@ contains
                 !enddo
             enddo
             !newmove=1
+            call cpu_time( time2)
+            if( timing) print*, "TIME ", time2 - time1
             if( Eprev .ne. 0.0 ) then
                 !if( sign(1.0d1,Eprev) .ne. sign(1.0d1,E) .or. V-Vprev > 0) then
 
