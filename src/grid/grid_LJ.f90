@@ -238,11 +238,11 @@ contains
         do i=1,this%points_nr
             !print*,"  j", i, " dist=", sqrt(sum((this%X(:,i) - x)**2))
             if( sqrt(sum((this%X(:,i) - x)**2)) > 0.0) then
-                dVdx(:) = dVdx(:) - this%duijdx( x, this%X(:,i)) 
+                dVdx(:) = dVdx(:) - this%duijdx( x, this%X(:,i))
                 !print*,"duijdx i j", x, i, this%duijdx( x, this%X(:,i)), "total=", dVdx(:) 
             else
             endif
-            dVdx(:) = dVdx(:) + this%system%dVdx( x) 
+            dVdx(:) = dVdx(:) + this%system%dVdx( x)
             !print*,"  j", i, " dist=", sqrt(sum((this%X(:,i) - x)**2)), " dUdx", dVdx
 
                 !write(*,*) "GRID_LJ::U ", i,j,Npoints,i-1, this%X(:,i), this%X(:,j)
@@ -267,6 +267,7 @@ contains
         !double precision, dimension(:), allocatable :: s, x0
         !double precision, dimension(:), allocatable :: U_move
         double precision, dimension(this%system%d,this%points_nr)  :: dUdx, totaldUdx
+        double precision, dimension(this%points_nr)  :: buff
         double precision, dimension(this%system%d)  :: mean
         double precision :: Delta_E, mv_cutoff=1.0, mv_cutoff_ref=1.0, deltae1=0.0, Eprev, Vprev, V, V_trial, P, E, SDX, dx=1.0
         double precision :: Vs, Vsprev
@@ -311,16 +312,26 @@ contains
         !print*,"X allocated?", allocated( this%X)
         Eprev = 0.0
         Vprev = 0.0
-        Vgprev = this%U() 
+        Vgprev = this%U() / 2.0
         totaldUdx(:,:) = 0.0
+        buff(:) = 0.0
+        !$OMP parallel default(none) shared(this, buff, Npoints) private(k)
+        !$OMP do 
         do k=1,Npoints
-            Vprev = Vprev + this%system%V( this%X(:,k)) * 2.0
-            do j=k+1, Npoints
-                !print*, "X k j=", j, k, this%X(:,k), this%X(:,j)
-                Vprev = Vprev + this%Pair_LJ_NRG( this%X(:,j), this%X(:,k))
-                !print*, "V j k=", j, k, Vprev
-            enddo
+            buff(k) = this%system%V( this%X(:,k))
+            !do j=k+1, Npoints
+            !    !print*, "X k j=", j, k, this%X(:,k), this%X(:,j)
+            !    Vprev = Vprev + this%Pair_LJ_NRG( this%X(:,j), this%X(:,k))
+            !    !print*, "V j k=", j, k, Vprev
+            !enddo
         enddo
+        !$OMP end do
+        !$OMP end parallel
+
+        do k=1,Npoints
+            Vprev = Vprev + buff(k)
+        enddo
+
         print*,"grid ", this%X
         do
             i = i + 1
@@ -345,6 +356,8 @@ contains
             !print*, this%Vij
             newmove = 0
             !print*, "eval grad", i
+            mean(:) = 0.0
+            E = 0.0
             !$OMP parallel default(none) shared(this,dUdx, mv_cutoff, Npoints) private(j,E)
             !$OMP do 
             do j=1, Npoints
@@ -362,73 +375,104 @@ contains
             enddo
             !$OMP end do
             !$OMP end parallel
-            mean(:) = 0.0
+
+            !$OMP parallel default(none) shared(dUdx, buff, Npoints) private(j)
+            !$OMP do 
+            do j=1, Npoints
+                buff =  sqrt(sum((dUdx(:,j))**2))
+            enddo
+            !$OMP end do
+            !$OMP end parallel
+
             E = 0.0
             do j=1, Npoints
                 E = E + sqrt(sum((dUdx(:,j))**2))
             enddo
+
+            !$OMP parallel default(none) shared(dUdx, this, Npoints) private(j)
+            !$OMP do 
             do j=1, Npoints
                 this%X(:,j) = this%X(:,j) + dUdx(:,j)
             enddo
+            !$OMP end do
+            !$OMP end parallel
+            
             V = 0.0
-            Vg = this%U() 
-            do k=1,Npoints
-                V = V + this%system%V( this%X(:,k)) 
-                do j=k+1, Npoints
-                    !print*, "X k j=", j, k, this%X(:,k), this%X(:,j)
-                    V = V + this%Pair_LJ_NRG( this%X(:,j), this%X(:,k))
-                    !print*, "V j k=", j, k, this%Vij(j,k)
-                enddo
+            Vg = this%U() / 2.0
+
+            !$OMP parallel default(none) shared(this, buff, Npoints) private(j)
+            !$OMP do 
+            do j=1,Npoints
+                buff(j) = this%system%V( this%X(:,j)) 
+                !do j=k+1, Npoints
+                !    !print*, "X k j=", j, k, this%X(:,k), this%X(:,j)
+                !    V = V + this%Pair_LJ_NRG( this%X(:,j), this%X(:,k))
+                !    !print*, "V j k=", j, k, this%Vij(j,k)
+                !enddo
+            enddo
+            !$OMP end do
+            !$OMP end parallel
+
+            do j=1,Npoints
+                V = V + buff(j) 
+                !do j=k+1, Npoints
+                !    !print*, "X k j=", j, k, this%X(:,k), this%X(:,j)
+                !    V = V + this%Pair_LJ_NRG( this%X(:,j), this%X(:,k))
+                !    !print*, "V j k=", j, k, this%Vij(j,k)
+                !enddo
             enddo
             !newmove=1
             if( Eprev .ne. 0.0 ) then
                 !if( sign(1.0d1,Eprev) .ne. sign(1.0d1,E) .or. V-Vprev > 0) then
 
-                if( V-Vprev > 0) then
-
-                    if( mv_cutoff .eq. mv_cutoff_ref) then
-                        totaldUdx(:,:) = this%X(:,:)
-                    endif
-                        
-                    mv_cutoff = mv_cutoff * .95
-                    newmove=0
-                    do j=1, Npoints
-                        this%X(:,j) = this%X(:,j) - dUdx(:,j)
-                    enddo
-                else
-                    !print*, "step", i, "USUM", sum( dUdx), "DX", E/Npoints, " V= ", V, " dV= ", V - Vprev
-                    print*, "step", i, "USUM", sum( dUdx), "DX", E/Npoints, " V= ", V, " dV= ", V - Vprev, " Vg= ", Vg, " dVg= ", &
-                        & Vg - Vgprev 
-                    newmove=1
-                    Eprev = E
-                    mv_cutoff = mv_cutoff_ref
-                    Vprev = V
-                    Vgprev = Vg
-                endif
-                if (newmove .eq. 0 .and. mv_cutoff < mv_cutoff_ref*this%opt_eps*10 .and. mv_cutoff_ref > this%opt_eps) then
-                    this%X(:,:) = totaldUdx(:,:)
-                    newmove=1
-                    mv_cutoff_ref = mv_cutoff_ref * .95
-                    print*, "****", i, "USUM", sum( dUdx), "DX", E/Npoints, " V= ", V, " dV= ", V - Vprev, " Vg= ", Vg, " dVg= ", &
-                        & Vg - Vgprev 
-                    print*, "mv_cutoff shrunk to", mv_cutoff_ref
-                    mv_cutoff = mv_cutoff_ref
-                    Eprev = E
-                    Vprev = V
-                    Vgprev = Vg
-                endif
+                !if( V+Vg-Vprev-Vgprev > 0) then
+                !    if( mv_cutoff .eq. mv_cutoff_ref) then
+                !        totaldUdx(:,:) = this%X(:,:)
+                !    endif
+                !        
+                !    mv_cutoff = mv_cutoff * .95
+                !    newmove=0
+                !    do j=1, Npoints
+                !        this%X(:,j) = this%X(:,j) - dUdx(:,j)
+                !    enddo
+                !else
+                !    !print*, "step", i, "USUM", sum( dUdx), "DX", E/Npoints, " V= ", V, " dV= ", V - Vprev
+                !    print*, "step", i, " E= ", V+Vg, "DX", E/Npoints, " V= ", V, " dV= ", V - Vprev, " Vg= ", Vg, " dVg= ", &
+                !        & Vg - Vgprev 
+                !    newmove=1
+                !    Eprev = E
+                !    mv_cutoff = mv_cutoff_ref
+                !    Vprev = V
+                !    Vgprev = Vg
+                !endif
+                !if (newmove .eq. 0 .and. mv_cutoff < this%opt_eps*10 .and. mv_cutoff_ref > this%opt_eps) then
+                !    this%X(:,:) = totaldUdx(:,:)
+                !    newmove=1
+                !    mv_cutoff_ref = mv_cutoff_ref * .95
+                !    print*, "****", i, " E= ", V+Vg, "DX", E/Npoints, " V= ", V, " dV= ", V - Vprev, " Vg= ", Vg, " dVg= ", &
+                !        & Vg - Vgprev 
+                !    print*, "mv_cutoff shrunk to", mv_cutoff_ref
+                !    mv_cutoff = mv_cutoff_ref
+                !    Eprev = E
+                !    Vprev = V
+                !    Vgprev = Vg
+                !endif
 
             else
                 Eprev = E
                 Vprev = V
                 Vgprev = Vg
             endif
-            !Eprev = E
-            !Vprev = V
-            !Vgprev = Vg
-            if( E/Npoints < this%opt_eps .or. mv_cutoff_ref < this%opt_eps) then
-            !if( E/Npoints < this%opt_eps) then
-                print*, "step", i, "USUM", sum( dUdx), "DX", E/Npoints, " V= ", V, " dV= ", V - Vprev
+            newmove=1
+            print*, "step", i, " E= ", V+Vg, "DX", E/Npoints, " V= ", V, " dV= ", V - Vprev, " Vg= ", Vg, " dVg= ", &
+                & Vg - Vgprev 
+            Eprev = E
+            Vprev = V
+            Vgprev = Vg
+            !if( E/Npoints < this%opt_eps .or. mv_cutoff_ref < this%opt_eps) then
+            if( E/Npoints < this%opt_eps) then
+                print*, "****", i, " E= ", V+Vg, "DX", E/Npoints, " V= ", V, " dV= ", V - Vprev, " Vg= ", Vg, " dVg= ", &
+                    & Vg - Vgprev 
                 print*, "converged!"
                 exit
             endif
@@ -489,11 +533,11 @@ contains
 !                    endif
 !                endif
 !            enddo
-            !if( newmove > 0 .and. mod( i, saveevery) == 0 ) then
-            if( newmove > 0 ) then
+            if( newmove > 0 .and. mod( i, saveevery) == 0 ) then
+            !if( newmove > 0 ) then
                 open(unit=20,file='grid.xyz', access='APPEND')
                     write(20,*) Npoints
-                    write(20,*) "step", i, "frame", framesaved
+                    write(20,*) "step", i, "frame", framesaved, " E ", E, " V ", V, " Vg ", Vg
                     do j=1,Npoints
                         write(20,*) "C     ", this%X(:,j)
                     enddo
@@ -579,7 +623,7 @@ contains
 
         MMC_freq = this%opt_tune
         N_MC     = this%opt_steps
-        N_MC = 10000
+        !N_MC = 10000
         mv_cutoff= this%mv_cutoff
         saveevery = this%saveevery 
 
@@ -610,7 +654,7 @@ contains
             endif
             newmove = 0
             !write(*,*) i,N_MC
-            E = sum(this%Vij) / 2
+            E = sum(this%Vij) 
             V = 0.0
             SDX = 0.0
             do k=1, Npoints
@@ -704,11 +748,11 @@ contains
             !    print*, "**CONVERGED TO STATIONARY POINT**"
             !    return
             !end if
-            if ( deltae1 == 0.0 ) then
-                this%cLJ = this%cLJ * .999
-            else
-                this%cLJ = this%cLJ * 1.001
-            endif
+            !if ( deltae1 == 0.0 ) then
+            !    this%cLJ = this%cLJ * .999
+            !else
+            !    this%cLJ = this%cLJ * 1.001
+            !endif
             accept=0
             hotaccept=0
             counter=0
