@@ -462,7 +462,6 @@ contains
             call cpu_time( time2)
             if( timing) print*, "TIME ", time2 - time1
             if( i > 1 ) then
-            if( Eprev .ne. 0.0 ) then
                 !if( sign(1.0d1,Eprev) .ne. sign(1.0d1,E) .or. V-Vprev > 0) then
 
                 if( V+Vg-Vprev-Vgprev > 0 ) then
