@@ -5,6 +5,7 @@ module grid_LJ_class
     type, extends( grid_t) :: grid_LJ_t
         integer :: opt_steps = 0, opt_tune = 0, opt_type = 0, saveevery = 1
         double precision :: opt_eps = 1d-7, cLJ = 1.0, mv_cutoff
+        logical :: adaptive  = .false.
     contains
         private
         procedure, public :: V
@@ -85,9 +86,11 @@ contains
         if( a > 0.0) then
             !if ( a < 20**2 ) then
             P = this%system%P( x1)
+            !print*,"GRID_LJ::NRG P(x1)= ", P
             sigma1=this%cLJ * (P * this%points_nr)**(-1./this%system%d)
             if(P == 0.0) sigma1 = 0.0
             P = this%system%P( x2)
+            !print*,"GRID_LJ::NRG P(x2)= ", P
             sigma2=this%cLJ * (this%system%P( x2) * this%points_nr)**(-1./this%system%d)    
             if(P == 0.0) sigma2 = 0.0
             b=(sigma2**2/a)**3
@@ -176,16 +179,18 @@ contains
                 a = dx * (  k*sigma1**k/r**(k+2) - m*sigma1**m/r**(m+2))
                 duijdx(i) = duijdx(i) + a
             endif
+            !print*,"b=", b, " P ", P, " dP ", dP
+            !print*, "i j a b", i, j, a, b
 
             ! uij case
             P = this%system%P( x1)
 
             if( P .ne. 0.0 ) then
                 dP = this%system%dPdx( x1)
-                b = ( dx - (dP(i) / (d * P)) )
-                b = b * m*this%cLJ / r**(m+2) / (N*P)**(m/d)
-                a = ( dx - (dP(i) / (d*P)) )
-                a = a * k*this%cLJ / r**(k+2) / (N*P)**(k/d)
+                b = (-dx/r**2 - (dP(i) / (d * P)) )
+                b = b * m*this%cLJ**k / r**(m) / (N*P)**(m/d)
+                a = (-dx - (dP(i) / (d*P)) )
+                a = a * k*this%cLJ**k / r**(k) / (N*P)**(k/d)
                 duijdx(i) = duijdx(i) + b - a
             endif
             !print*,"b=", b, " P ", P, " dP ", dP
@@ -238,11 +243,11 @@ contains
         do i=1,this%points_nr
             !print*,"  j", i, " dist=", sqrt(sum((this%X(:,i) - x)**2))
             if( sqrt(sum((this%X(:,i) - x)**2)) > 0.0) then
-                dVdx(:) = dVdx(:) - this%duijdx( x, this%X(:,i)) / 2.0
+                dVdx(:) = dVdx(:) - this%duijdx( x, this%X(:,i))
                 !print*,"duijdx i j", x, i, this%duijdx( x, this%X(:,i)), "total=", dVdx(:) 
             else
             endif
-            dVdx(:) = dVdx(:) + this%system%dVdx( x)
+            !dVdx(:) = dVdx(:) + this%system%dVdx( x)  
             !print*,"  j", i, " dist=", sqrt(sum((this%X(:,i) - x)**2)), " dUdx", dVdx
 
                 !write(*,*) "GRID_LJ::U ", i,j,Npoints,i-1, this%X(:,i), this%X(:,j)
@@ -251,12 +256,27 @@ contains
 
     subroutine optimize( this)
         class (grid_LJ_t) :: this
+        real, dimension(this%system%d,this%points_nr) :: buf
+        integer :: steps
         open(unit=20,file='grid.xyz', status='REPLACE')
         close(20)
-        !call optimize_MC( this)
-        !do while (this%cLJ < 6)
+        steps = this%opt_steps
+        this%opt_steps = 1000
+        call optimize_MC( this)
+        !this%cLJ=12.0
+        !buf(:,:) = this%X(:,:)
+        !do while (this%cLJ > 0)
+        !    print*, "** LJ=", this%cLJ
+
+        this%opt_steps = 1000
+        this%adaptive=.false.
         call optimize_CG( this)
-        !    this%cLJ = this%cLJ *2
+        this%adaptive=.true.
+        this%opt_steps = steps
+        call optimize_CG( this)
+
+        !    this%X(:,:) = buf(:,:)
+        !    this%cLJ = this%cLJ -2.0
         !enddo
         !call optimize_MC( this)
         !call optimize_CG( this)
@@ -276,7 +296,7 @@ contains
         double precision :: Vs, Vsprev, F, Fprev, time1, time2
         integer :: i, j, k, counter=0, Npoints, accept=0, hotaccept=0,plt_count=0, MMC_freq, N_MC, newmove=0, framesaved=1
         integer :: saveevery
-        logical :: converged = .false.
+        logical :: converged = .false., adaptive = .false.
         character(1) :: saved = 'N'
         logical, parameter :: timing = .false.
         !double precision, dimension(this%points_nr,this%points_nr)  :: Vij
@@ -297,6 +317,7 @@ contains
         mv_cutoff_ref= this%mv_cutoff
         saveevery = this%saveevery 
         dx = .01 !this%mv_cutoff
+        adaptive = this%adaptive
 
         !open(unit=18,file='mv_cut.dat')
         !open(unit=19,file='delE.dat')
@@ -461,7 +482,8 @@ contains
             !print fmt,  i, N_MC, 'N', F, F - Fprev, V+Vg, V+Vg-Vprev-Vgprev, E, V, V - Vprev, Vg, Vg - Vgprev
             call cpu_time( time2)
             if( timing) print*, "TIME ", time2 - time1
-            if( i > 1 ) then
+            if( adaptive) then
+            if( i > 1) then
                 !if( sign(1.0d1,Eprev) .ne. sign(1.0d1,E) .or. V-Vprev > 0) then
 
                 if( V+Vg-Vprev-Vgprev > 0 ) then
@@ -492,8 +514,8 @@ contains
                     this%X(:,:) = totaldUdx(:,:) 
                     newmove=1
                     mv_cutoff_ref = mv_cutoff_ref * .95
-                    print fmt,  i, N_MC, '!', F, F - Fprev, V+Vg, V+Vg-Vprev-Vgprev, E, V, V - Vprev, Vg, Vg - Vgprev
-                    print*, "**** mv_cutoff shrunk to", mv_cutoff_ref
+                    !print fmt,  i, N_MC, '!', F, F - Fprev, V+Vg, V+Vg-Vprev-Vgprev, E, V, V - Vprev, Vg, Vg - Vgprev
+                    !print*, "**** mv_cutoff shrunk to", mv_cutoff_ref
                     mv_cutoff = mv_cutoff_ref
                     !Eprev = E
                     !Vprev = V
@@ -501,14 +523,10 @@ contains
                     !Fprev = F
                     continue
                 endif
-
-            else
-                !Eprev = E
-                !Vprev = V
-                !Vgprev = Vg
-                !Fprev = F
             endif
-            !newmove=1
+            else
+                newmove=1
+            endif
             !if( E/Npoints < this%opt_eps .or. mv_cutoff_ref < this%opt_eps) then
             if( newmove > 0) then
             !if( newmove > 0 ) then
@@ -678,7 +696,7 @@ contains
 
         MMC_freq = this%opt_tune
         N_MC     = this%opt_steps
-        !N_MC = 10000
+        !N_MC = 20000
         mv_cutoff= this%mv_cutoff
         saveevery = this%saveevery 
 
