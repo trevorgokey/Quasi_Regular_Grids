@@ -78,9 +78,9 @@ contains
             !print *,"x is:", x, "for i=", i, "Ncenters", this%Ncenters
             !print *, "thisx is", this%X(:,i)
             dist = (sum( (x(:) - this%X(:,i))**2))
+            !print*, "SYS_GBAS   energy V dist x X", V, dist, x(:), this%X(:,i)
             !if ( dist < sigma*3 ) then
             V = V - this%cPrefac*exp(-dist/this%cSigma) 
-            !print*, "SYS_GBAS   energy V dist x X", V, dist, x(:), this%X(:,i)
             !print*, "SYS_GBAS   energy dist", sqrt(sum( (x(:) - this%X(:,i))**2)) !x(:) - this%X(:,i)
             !end if
         end do
