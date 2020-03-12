@@ -4,14 +4,17 @@
 #==============================================================================#
 FC=gfortran 
 LIBS=
+FLTO=
 
 # DEBUG FLAGS
-FFLAGS=-O0 -gdwarf  -Wall
-LDFLAGS= 
+#FFLAGS=-O0 -gdwarf -fbounds-check -fsanitize=address# -Wall -fno-stack-protector
+#LIBS+=-lasan
 
+# LTO
+FLTO=-flto -fuse-linker-plugin
 # OPT FLAGS
-FFLAGS=-O3 -march=native -mtune=native -fomit-frame-pointer -pipe
-LDFLAGS=-Wl,-O2 -Wl,--as-needed
+FFLAGS=-O3 -march=native -mtune=native -fomit-frame-pointer -pipe  $(FLTO)
+LDFLAGS=-Wl,-O2 -Wl,--as-needed $(FLTO)
 
 # USE PARALLELIZATION
 FFLAGS+=-fopenmp
@@ -32,7 +35,7 @@ GRID=$(SRCDIR)/grid
 # MAIN BINARY
 
 qrg: qrg.o
-	$(FC) $(LDFLAGS) -o $(SRCDIR)/qrg qrg.o -L. $(MYLIBS) $(LIBS)
+	$(FC) $(LDFLAGS) -o $(SRCDIR)/qrg qrg.o $(LIBS) -L. $(MYLIBS) 
 
 # CORE
 
