@@ -266,7 +266,7 @@ contains
                 dVdx(:) = dVdx(:) + this%duijdx( x, this%X(:,i))
                 !print*,"duijdx i j", x, i, this%duijdx( x, this%X(:,i)), "total=", dVdx(:) 
             else
-                dVdx(:) = dVdx(:) + this%system%dPdx( x)  
+                !dVdx(:) = dVdx(:) + this%system%dPdx( x)  
             endif
             !print*,"  j", i, " dist=", sqrt(sum((this%X(:,i) - x)**2)), " dUdx", dVdx
 
@@ -283,6 +283,7 @@ contains
         steps = this%opt_steps
         !this%opt_steps = 1000
         this%adaptive = .true.
+        this%adaptive = .false.
         print*,"MCCG"
         call optimize_MCCG( this)
         call optimize_CG( this)
@@ -313,7 +314,7 @@ contains
 
         !double precision, dimension(:), allocatable :: s, x0
         !double precision, dimension(:), allocatable :: U_move
-        double precision, dimension(this%system%d,this%points_nr)  :: dUdx, totaldUdx
+        double precision, dimension(this%system%d,this%points_nr)  :: dUdx, totaldUdx, sdVdx
         double precision, dimension(this%points_nr)  :: buff
         double precision, dimension(this%system%d)  :: mean
         double precision :: Delta_E, mv_cutoff=1.0, mv_cutoff_ref=1.0, deltae1=0.0, Eprev, Vprev, V, V_trial, P, E, SDX, dx=1.0
@@ -364,6 +365,7 @@ contains
         Vprev = 0.0
         Vgprev = this%U() 
         totaldUdx(:,:) = 0.0
+        sdVdx = 0.0
         buff(:) = 0.0
         if( timing) print*, "SYSTEM V"
         call cpu_time( time1)
@@ -414,30 +416,59 @@ contains
             F = 0.0
             if( timing) print*,"DVDX"
             call cpu_time( time1)
-            !$OMP parallel default(none) shared(this,dUdx, buff, mv_cutoff, Npoints) private(j,E, F)
-            !$OMP do 
-            do j=1, Npoints
-                dUdx(:,j) = -this%dVdx( this%X(:, j))
-                !print*,j, "dUdx is", dUdx(:,j)
-                F = sqrt(sum(dUdx(:,j)**2))
-                buff(j) = F
-                if( F > mv_cutoff ) then
-                    dUdx(:,j) = dUdx(:,j) / F * mv_cutoff
-                endif
-                !E = min(mv_cutoff, E)
-                !dUdx(:,j) = dUdx(:,j) !* E 
 
-                    !print*, j,"dUdx=", dUdx(:,j), "dx=", dUdx(:,j) * .01
+            if ( .true.) then
+                !$OMP parallel default(none) shared(this,dUdx,sdVdx,buff, mv_cutoff, Npoints) private(j,E, F)
+                !$OMP do 
+                do j=1, Npoints
+                    dUdx(:,j) = -this%dVdx( this%X(:, j))
+                    !print*,j, "dUdx is", dUdx(:,j)
+
+                    F = sqrt(sum(dUdx(:,j)**2))
+                    buff(j) = F
+                    if( F > mv_cutoff ) then
+                        dUdx(:,j) = dUdx(:,j) / F * mv_cutoff
+                    endif
+                enddo
+                !$OMP end do
+                !$OMP end parallel
+                F = 0.0
+                do j=1, Npoints
+                    F = F + buff(j)
+                enddo
+                F = F/Npoints
+            else
+                !$OMP parallel default(none) shared(this,dUdx,sdVdx,buff, mv_cutoff, Npoints) private(j,E, F)
+                !$OMP do 
+                do j=1, Npoints
+                    dUdx(:,j) = -this%dVdx( this%X(:, j))
+                    sdVdx(:,j) = -this%system%dPdx( this%X(:, j))
+                enddo
+                !$OMP end do
+                !$OMP end parallel
+                !print*, "distances ", sqrt(sum(dUdx**2)), sqrt(sum(sdVdx**2))
+                dUdx = dUdx + sdVdx 
+                dUdx = dUdx / 2.0
+                !dx = sum(dUdx/sqrt(sum(dUdx**2)) * sdVdx/sqrt(sum(sdVdx**2)))
+                !if (sqrt(sum(dUdx**2)) > sqrt(sum(sdVdx**2))) then
+                !    dUdx(:,:) = sdVdx
+                !    dx = dx * sqrt(sum(sdVdx**2))
+                !else
+                !    dx = dx * sqrt(sum(dUdx**2))
                 !endif
-            enddo
-            !$OMP end do
-            !$OMP end parallel
+                !dx=dx * min( sqrt(sum(dUdx**2)), )
+                !if (dx > 0) then
 
-            F = 0.0
-            do j=1, Npoints
-                F = F + buff(j)
-            enddo
-            F = F/Npoints
+                !    dUdx = (dUdx + sdVdx) / 2.0
+                !    dx = sqrt(sum(dUdx**2))
+                !    print*,"QUIT! dx= ", dx, "F=", F
+                !end if
+                F = sqrt(sum(dUdx**2))
+                dx=min(dx, mv_cutoff)
+                dUdx = dUdx / sqrt(sum(dUdx**2)) * dx
+            endif
+
+
 
             call cpu_time( time2)
             if( timing) print*, "TIME ", time2 - time1
@@ -1037,8 +1068,8 @@ contains
                 Delta_E = Delta_E !+ ( V_trial - this%system%V( this%X(:,k)) )
                 !write(*,*) "Delta_E from reduce is", Delta_E
                 !write(*,*) "new is", U_move(k), "old was", this%Vij(k,k), "P(x) is", P
-                !if(Delta_E>0d0 .or. exp(Delta_E) > .5) then
-                if( Delta_E<0d0) then
+                if(Delta_E<0d0 .or. exp(Delta_E) < .05) then
+                !if( Delta_E<0d0) then
                     this%Vij(:,k)=U_move(:)
                     this%Vij(k,:)=U_move(:)
                     accept=accept+1
