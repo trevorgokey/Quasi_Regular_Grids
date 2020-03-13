@@ -179,47 +179,20 @@ contains
             if( P .ne. 0.0) then
                 sigma1 = this%cLJ * (P * N)**(-1./d) 
                 a = dx * (  k*sigma1**k/r**(k+2) - m*sigma1**m/r**(m+2))
-                !duijdx(i) = duijdx(i) - a
+                duijdx(i) = duijdx(i) + a
             endif
-            !P = this%system%P( x1)
-            !a = 0.0
-            !b = 0.0
-            !!print*, "i j sigma1", i, j, sigma1
-            !!print*,"a=", a, " sigma1 ", sigma1, " P ", P
-            !if( P .ne. 0.0) then
-            !    sigma1 = this%cLJ * (P * N)**(-1./d) 
-            !    a = -dx * (  k*sigma1**k/r**(k+2) - m*sigma1**m/r**(m+2))
-            !    duijdx(i) = duijdx(i) + a
-            !endif
-            !print*,"b=", b, " P ", P, " dP ", dP
-            !print*, "i j a b", i, j, a, b
 
             ! uij case
 
-            !P = this%system%P( x1)
 
             if( P .ne. 0.0 ) then
                 dP = this%system%dPdx( x1)
-                b = (dx/r**2 - (dP(i) / (d * P)) )
+                b = (-dx/r**2 - (dP(i) / (d * P)) )
                 b = b * m*this%cLJ**(m) / r**(m) / (N*P)**(m/d)
-                a = (dx/r**2 - (dP(i) / (d*P)) )
+                a = (-dx/r**2 - (dP(i) / (d*P)) )
                 a = a * k*this%cLJ**(k) / r**(k) / (N*P)**(k/d)
                 duijdx(i) = duijdx(i) + b - a
             endif
-            !P = this%system%P( x2)
-
-            !if( P .ne. 0.0 ) then
-            !    dP = this%system%dPdx( x2)
-            !    b = (-dx/r**2 - (dP(i) / (d * P)) )
-            !    b = b * m*this%cLJ**(m) / r**(m) / (N*P)**(m/d)
-            !    a = (-dx/r**2 - (dP(i) / (d*P)) )
-            !    a = a * k*this%cLJ**(k) / r**(k) / (N*P)**(k/d)
-            !    duijdx(i) = duijdx(i) + b - a
-            !endif
-            !print*,"b=", b, " P ", P, " dP ", dP
-            !print*, "i j a b", i, j, a, b
-            !duijdx(i) = duijdx(i) + a
-            !print*,duijdx(i)
         enddo
         
         !do i=1, size(x1)
@@ -263,10 +236,28 @@ contains
         do i=1,this%points_nr
             !print*,"  j", i, " dist=", sqrt(sum((this%X(:,i) - x)**2))
             if( sqrt(sum((this%X(:,i) - x)**2)) > 0.0) then
-                dVdx(:) = dVdx(:) + this%duijdx( x, this%X(:,i))
+                ! this version pushes everything out ( center less dense
+                ! duij did -dx in dudxj term, sum both terms
+                ! + x X - X x
+                !dVdx(:) = dVdx(:)   - this%duijdx( x, this%X(:,i)) + this%duijdx( this%X(:,i), x) !
+
+                ! this clumps
+                !dVdx(:) = dVdx(:)   + this%duijdx( x, this%X(:,i)) - this%duijdx( this%X(:,i), x) !
+
+    
+                ! -  repels everything outside cut, + brings everything to origin
+                !dVdx(:) = dVdx(:)   + this%duijdx( x, this%X(:,i)) !- this%duijdx( this%X(:,i), x) !
+
+                ! -  repels, but everything seems more coupled 
+                !dVdx(:) = dVdx(:)   - this%duijdx( this%X(:,i), x) !
+
+                ! this + - produces the bee effect even when P1 and P2
+                !dVdx(:) = dVdx(:)   + this%duijdx( this%X(:,i), x) !+ this%duijdx( x, this%X(:,i))
+
+                dVdx(:) = dVdx(:)   + this%duijdx( this%X(:,i), x)
                 !print*,"duijdx i j", x, i, this%duijdx( x, this%X(:,i)), "total=", dVdx(:) 
             else
-                !dVdx(:) = dVdx(:) + this%system%dPdx( x)  
+                dVdx(:) = dVdx(:) + this%system%dVdx( x)
             endif
             !print*,"  j", i, " dist=", sqrt(sum((this%X(:,i) - x)**2)), " dUdx", dVdx
 
@@ -283,12 +274,12 @@ contains
         steps = this%opt_steps
         !this%opt_steps = 1000
         this%adaptive = .true.
-        this%adaptive = .false.
+        !this%adaptive = .false.
         print*,"MCCG"
+        !call optimize_MCCG( this)
         call optimize_MCCG( this)
-        call optimize_CG( this)
-        call optimize_MCCG( this)
-        call optimize_CG( this)
+        !call optimize_CG( this)
+        !call optimize_CG( this)
         !this%cLJ=12.0
         !buf(:,:) = this%X(:,:)
         !do while (this%cLJ > 0)
@@ -327,7 +318,7 @@ contains
         !double precision, dimension(this%points_nr,this%points_nr)  :: Vij
         !double precision, dimension(3,this%points_nr)  :: X
         !character(len=*), parameter :: fmt = "(I8,A1,I10,A5,F6.3,A5,E8.6,A5,E8.6,A5,E8.6,5A,E8.6,A7,F6.3,5A,I4,I6)"
-        character(len=*), parameter :: fmt = '(I10, " /", I10,1x, A1, "  F=", ES15.8, "  DF=", ES15.8, "  E=", ES15.8, &
+        character(len=*), parameter :: fmt = '(I10, " /", I10,1x, I10, "  F=", ES15.8, "  DF=", ES15.8, "  E=", ES15.8, &
             "   DE=", ES15.8, "   DX=", ES15.8, "   V=", ES15.8, "   dV=", ES15.8,"   Vg=", ES15.8, "   dVg= ", ES15.8 )'
 
         !Vij = this%Vij
@@ -595,7 +586,7 @@ contains
                     converged = .true.
                 endif
                 if( mod( i, saveevery) == 0 .or. converged) then
-                    print fmt,  i, N_MC, 'Y', F, F - Fprev, V+Vg, V+Vg-Vprev-Vgprev, E, V, V - Vprev, Vg, Vg - Vgprev
+                    print fmt,  i, N_MC, framesaved, F, F - Fprev, V+Vg, V+Vg-Vprev-Vgprev, E, V, V - Vprev, Vg, Vg - Vgprev
                     !print*, "step", i, " F= ", F, " dF= ", F - Fprev, " E= ", V+Vg, "DX", E, " V= ", V, " dV= ", V - Vprev, &
                     !    & " Vg= ", Vg, " dVg= ", Vg - Vgprev
                     open(unit=20,file='grid.xyz', access='APPEND')
@@ -918,7 +909,7 @@ contains
         !double precision, dimension(this%points_nr,this%points_nr)  :: Vij
         !double precision, dimension(3,this%points_nr)  :: X
         !character(len=*), parameter :: fmt = "(I8,A1,I10,A5,F6.3,A5,E8.6,A5,E8.6,A5,E8.6,5A,E8.6,A7,F6.3,5A,I4,I6)"
-        character(len=*), parameter :: fmt = '(I10, " /", I10,1x, A1, "  F=", ES15.8, "  DF=", ES15.8, "  E=", ES15.8, &
+        character(len=*), parameter :: fmt = '(I10, " /", I10,1x, I10, "  F=", ES15.8, "  DF=", ES15.8, "  E=", ES15.8, &
             "   DE=", ES15.8, "   DX=", ES15.8, "   V=", ES15.8, "   dV=", ES15.8,"   Vg=", ES15.8, "   dVg= ", ES15.8 )'
 
         !Vij = this%Vij
@@ -933,7 +924,7 @@ contains
         mv_cutoff_ref= this%mv_cutoff
         saveevery = this%saveevery 
         dx = .01 !this%mv_cutoff
-        adaptive = this%adaptive
+        !adaptive = this%adaptive
 
         !open(unit=18,file='mv_cut.dat')
         !open(unit=19,file='delE.dat')
@@ -1068,7 +1059,7 @@ contains
                 Delta_E = Delta_E !+ ( V_trial - this%system%V( this%X(:,k)) )
                 !write(*,*) "Delta_E from reduce is", Delta_E
                 !write(*,*) "new is", U_move(k), "old was", this%Vij(k,k), "P(x) is", P
-                if(Delta_E<0d0 .or. exp(Delta_E) < .05) then
+                if(Delta_E<0d0 .or. exp(Delta_E) < .00001) then
                 !if( Delta_E<0d0) then
                     this%Vij(:,k)=U_move(:)
                     this%Vij(k,:)=U_move(:)
@@ -1076,6 +1067,8 @@ contains
                     newmove = 1
                     Vg = Vg + Delta_E
                     V = V + ( V_trial - this%system%V( this%X(:,k)))
+                    !F = F + ( sqrt( sum( this%dVdx( x0)**2)) - sqrt(sum( this%dVdx( this%X(:,k))**2)))
+                    F = F + ( sqrt( sum( mv_cutoff*(2.0*s-1.0)**2)) - sqrt(sum( this%dVdx( this%X(:,k))**2)))
                     !write(*,*) k, Delta_E, "Accepted! Displacement was", &
                     !    & sqrt(sum((mv_cutoff*(2*s-1))**2)), "V(x0)", V, this%X(:,k), x0, Vg, Delta_E! " DX ", sqrt(sum((this%X(:,k)-x0(:))**2))
                     !SDX = SDX + sqrt(sum((this%X(:,k)-x0(:))**2))
@@ -1264,27 +1257,10 @@ contains
 
 
 
-                !$OMP parallel default(none) shared(this, buff, Npoints) private(k)
-                !$OMP do 
-                do k=1,Npoints
-                    buff(k) = sqrt(sum(this%dVdx( this%X(:,k))**2))
-                    !do j=k+1, Npoints
-                    !    !print*, "X k j=", j, k, this%X(:,k), this%X(:,j)
-                    !    Vprev = Vprev + this%Pair_LJ_NRG( this%X(:,j), this%X(:,k))
-                    !    !print*, "V j k=", j, k, Vprev
-                    !enddo
-                enddo
-                !$OMP end do
-                !$OMP end parallel
-                F = 0.0
-                do j=1, Npoints
-                    F = F + buff(j)
-                enddo
-                F = F/Npoints
 
 
                 if( mod( i, saveevery) == 0 .or. converged) then
-                    print fmt,  i, N_MC, 'Y', F, F - Fprev, V+Vg, V+Vg-Vprev-Vgprev, E, V, V-Vprev, Vg, Vg-Vgprev
+                    print fmt,  i, N_MC, framesaved, F, F - Fprev, V+Vg, V+Vg-Vprev-Vgprev, E, V, V-Vprev, Vg, Vg-Vgprev
                     !print*, "step", i, " F= ", F, " dF= ", F - Fprev, " E= ", V+Vg, "DX", E, " V= ", V, " dV= ", V - Vprev, &
                     !    & " Vg= ", Vg, " dVg= ", Vg - Vgprev
                     open(unit=20,file='grid.xyz', access='APPEND')
@@ -1306,7 +1282,7 @@ contains
                 Vgprev = Vg
                 Fprev = F
             else if (i == N_MC) then
-                print fmt,  i, N_MC, 'Y', F, F - Fprev, V+Vg, V+Vg-Vprev-Vgprev, E, V, V-Vprev, Vg, Vg-Vgprev
+                print fmt,  i, N_MC, -1, F, F - Fprev, V+Vg, V+Vg-Vprev-Vgprev, E, V, V-Vprev, Vg, Vg-Vgprev
             endif
             dUdx(:,k) = 0.0
 
