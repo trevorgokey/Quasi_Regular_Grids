@@ -14,6 +14,7 @@ module grid_LJ_class
         procedure, public :: optimize 
         procedure, public :: dVdx
         procedure :: duijdx
+        procedure, public :: d2Vdx2
         !procedure :: P
     end type
 
@@ -1389,10 +1390,63 @@ contains
         !    enddo
         !close(21)
     enddo
+
+    call d2Vdx2(this, "hess.dat")
     !close(18)
     !close(19)
     !deallocate( U_move, s, x0)
 
+    end subroutine
+
+    subroutine d2Vdx2( this, fname)
+        implicit none
+        class (grid_LJ_t) :: this
+        character(len=*) :: fname
+        integer :: i,j,k,l
+        integer :: N, d  
+        real(8), dimension(this%system%d,2) :: ptA, ptB
+        real(8), dimension(this%system%d) :: E
+        real(8) :: x, y, a, b
+        real(8), parameter :: dx = 1e-5
+        real(8), dimension( this%points_nr*this%system%d, this%points_nr*this%system%d )  :: hessian
+        integer, parameter :: fid = 16
+        N = this%points_nr
+        d = this%system%d
+
+        print*,"Calculating hessian.."
+        do i=1,N
+            ptA(:,1) = this%X(:,i)
+            ptA(:,2) = this%X(:,i)
+            ptA(:,1) = this%dVdx( this%X(:,i))
+            do j=1, i
+                ptB(:,1) = this%X(:,j)
+                ptB(:,2) = this%X(:,j)
+                ptB(:,1) = this%dVdx( this%X(:,j))
+                do k=1, d
+                    x = ptA(k,2)
+                    ptA(k,2) = ptA(k,2) + dx
+                    do l=1, k
+                        y = ptA(l,2)
+                        ptA(l,2) = ptA(l,2) + dx
+                        print*,"A", this%dVdx( ptA(:,2)), ptA(:,1) 
+                        print*,"diff", (this%dVdx( ptA(:,2)) - ptA(:,1))
+                        E = (this%dVdx( ptA(:,2)) - ptA(:,1)) / dx**2
+                        hessian((i-1)*d + k, (j-1)*d + l) = E(k) * E(l)
+                        hessian((j-1)*d + l, (i-1)*d + k) = hessian((i-1)*d + k, (j-1)*d + l)
+                        ptA(l,2) = y
+                    enddo
+                    ptA(k,2) = x
+                enddo
+            enddo
+        enddo
+
+        print*,"Saving hessian to", fname
+        open(fid, file=fname)
+        write(fid,*) d, N
+        do i=1, d*N
+            write(fid,*) hessian(:,i)
+        enddo
+        close(fid)
     end subroutine
 
 end module grid_LJ_class
