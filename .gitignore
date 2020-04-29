@@ -1,0 +1,5 @@
+src/obj/*.o
+src/obj/*.mod
+src/obj/*.a
+src/qrg
+example/test*
