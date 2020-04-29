@@ -1,0 +1,4 @@
+obj/*.o
+obj/*.mod
+obj/*.a
+qrg
