@@ -33,7 +33,7 @@ contains
         if( this%E_cut - P > 0.0 ) then
            P = ( this%E_cut - P)**(d/2.0) 
         else
-           P = exp(this%E_cut - P)
+           P = 0.0 !exp(this%E_cut - P)
         endif
     end function P
 
@@ -47,8 +47,8 @@ contains
         V = this%V( x)
         d = this%d
         diff = this%E_cut - V
-        if( diff < 0.0) then
-            dPdx(:) = -this%dVdx( x)
+        if( diff <= 0.0) then
+            dPdx(:) = 0.0 !-this%dVdx( x)
         else
             !print*, "dPdx was ", dPdx
             dPdx(:) = -(d/2.0)*( diff)**(d/2.0 - 1) * this%dVdx( x)
